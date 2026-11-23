@@ -785,42 +785,41 @@ mark{background:var(--ambersoft);color:var(--amber);border-radius:3px;padding:0 
       </div>
     </div>
     <nav class="nav" id="nav" aria-label="模块导航">
-      <div class="nav-label">阶段一 · 建立事实档案</div>
+      <div class="nav-label">个人事实档案</div>
       <button class="nav-item" data-action="nav" data-module="dash">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M9 2v3M9 13v3M2 9h3M13 9h3"/><circle cx="9" cy="9" r="1.6" fill="currentColor"/></svg>
-        01 航线首页<span class="n-badge" id="nav-radar-badge"></span>
+        海图首页<span class="n-badge" id="nav-radar-badge"></span>
       </button>
       <button class="nav-item" data-action="nav" data-module="profile">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2l1.8 4.2L15 8l-4.2 1.8L9 14l-1.8-4.2L3 8l4.2-1.8z"/></svg>
-        02-05 建立档案
+        建立档案
       </button>
       <button class="nav-item" data-action="nav" data-module="evidence">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2v4M9 12v4M2 9h4M12 9h4M4.5 4.5l2 2M11.5 11.5l2 2M13.5 4.5l-2 2M6.5 11.5l-2 2"/></svg>
-        04 经历工坊
+        经历工坊
       </button>
-      <div class="nav-label" style="margin-top:8px">阶段二 · 确认档案</div>
       <button class="nav-item" data-action="nav" data-module="preview">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2.5" width="12" height="13" rx="1.8"/><path d="M6 6.5h6M6 9.5h6M6 12.5h4"/></svg>
-        06 档案预览确认
+        档案预览
       </button>
-      <div class="nav-label" style="margin-top:8px">阶段三 · 方向与目标</div>
+      <div class="nav-label" style="margin-top:8px">方向探索与规划</div>
       <button class="nav-item" data-action="nav" data-module="paths">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 15c3-1 4-4 4-7M7 8c0-3 2-5 5-5M7 8c2 0 5 1 7 4"/><circle cx="3" cy="15" r="1.4" fill="currentColor"/><circle cx="12" cy="3" r="1.4" fill="currentColor"/><circle cx="14" cy="12" r="1.4" fill="currentColor"/></svg>
-        07 路径选择
+        选择路径
       </button>
       <button class="nav-item" data-action="nav" data-module="diag">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12l3.5-4 3 2.5L13 5l3 3"/><circle cx="13" cy="5" r="1.5" fill="currentColor"/></svg>
-        08 专属诊断
+        专属诊断
       </button>
       <button class="nav-item" data-action="nav" data-module="jobs">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="5.5" width="13" height="9" rx="1.5"/><path d="M6.5 5.5V4a1.5 1.5 0 011.5-1.5h2A1.5 1.5 0 0111.5 4v1.5M2.5 9.5h13"/></svg>
-        09 就业·岗位库
+        就业·岗位库
       </button>
-      <div class="nav-label" style="margin-top:8px">全局联动与辅助</div>
       <button class="nav-item" data-action="nav" data-module="conflict">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h14M2 9h14M2 13h14"/><rect x="9" y="3" width="5" height="12" rx="1.5" fill="currentColor" opacity=".28"/></svg>
-        10 时间冲突海图
+        冲突海图
       </button>
+      <div class="nav-label" style="margin-top:8px">辅助与架构</div>
       <button class="nav-item" data-action="nav" data-module="intel">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="6.5"/><circle cx="9" cy="9" r="3"/><path d="M9 9l4.5-4.5"/><circle cx="9" cy="9" r=".8" fill="currentColor"/></svg>
         定向情报<span class="n-badge" id="nav-intel-badge"></span>
@@ -4271,13 +4270,13 @@ function markUpstreamChanged(label){
 function checkProfileCompleteness(p = state.profile){
   const deferred = new Set(Array.isArray(p.deferredFields) ? p.deferredFields : []);
   const items = [
-    {key:'school', label:'学校与在读年级', critical:true, ok:Boolean(p.school.trim() && p.grade), page:0, hint:'用于校招届别平移与同层次院校对标'},
-    {key:'major', label:'确认修读专业', critical:true, ok:Boolean(p.major.trim()), page:1, hint:'决定公开培养方案匹配与岗位专业硬门槛核验'},
-    {key:'scores', label:'均分或专业排名', critical:false, ok:Boolean(p.gpa !== null || (p.rank && p.rankTotal)), deferred:deferred.has('scores'), page:0, hint:'影响保研推免圈与留学均分门槛测算'},
-    {key:'gradDegree', label:'预计毕业年月与取得学历', critical:false, ok:Boolean(p.graduationDate && p.degree), deferred:deferred.has('gradDegree'), page:0, hint:'用于精确核对校招/实习岗位的届别与学历要求'},
-    {key:'courses', label:'已修 / 在修课程记录', critical:false, ok:p.courses.length > 0, deferred:deferred.has('courses'), page:1, hint:'提供先修课基础与无简历冷启动匹配依据'},
-    {key:'achievements', label:'经历工坊入库成果', critical:false, ok:p.achievements.length > 0, deferred:deferred.has('achievements'), page:2, hint:'提供高权重项目/实习/课设实证（暂无可标记稍后补充）'},
-    {key:'schedules', label:'05a 固定日程安排', critical:false, ok:(p.schedules || []).length > 0, deferred:deferred.has('schedules'), page:3, hint:'用于在冲突海图中校核课程、考试周与投递窗口撞期'},
+    {key:'school', label:'学校与在读年级', pageName:'基础档案', critical:true, ok:Boolean(p.school.trim() && p.grade), page:0, hint:'用于校招届别平移与同层次院校对标'},
+    {key:'major', label:'确认修读专业', pageName:'专业与课程', critical:true, ok:Boolean(p.major.trim()), page:1, hint:'决定公开培养方案匹配与岗位专业硬门槛核验'},
+    {key:'scores', label:'均分或专业排名', pageName:'基础档案', critical:false, ok:Boolean(p.gpa !== null || (p.rank && p.rankTotal)), deferred:deferred.has('scores'), page:0, hint:'影响保研推免圈与留学均分门槛测算'},
+    {key:'gradDegree', label:'预计毕业年月与取得学历', pageName:'基础档案', critical:false, ok:Boolean(p.graduationDate && p.degree), deferred:deferred.has('gradDegree'), page:0, hint:'用于精确核对校招/实习岗位的届别与学历要求'},
+    {key:'courses', label:'已修 / 在修课程记录', pageName:'专业与课程', critical:false, ok:p.courses.length > 0, deferred:deferred.has('courses'), page:1, hint:'提供先修课基础与无简历冷启动匹配依据'},
+    {key:'achievements', label:'经历工坊入库成果', pageName:'经历工坊', critical:false, ok:p.achievements.length > 0, deferred:deferred.has('achievements'), page:2, hint:'提供项目/实习/课设实证（暂无可标记稍后补充）'},
+    {key:'schedules', label:'固定日程安排', pageName:'时间与成果', critical:false, ok:(p.schedules || []).length > 0, deferred:deferred.has('schedules'), page:3, hint:'用于在冲突海图中校核课程、考试周与投递窗口撞期'},
   ];
   const missingCritical = items.filter(x => x.critical && !x.ok);
   const unresolvedOptional = items.filter(x => !x.critical && !x.ok && !x.deferred);
@@ -4335,62 +4334,19 @@ function syncJobsToActionPlan(showFeedback = false){
     });
   }
   state.actionPlan = nextItems;
-  if(jobIds.length && !state.paths.includes('jiuye')){
-    state.paths.push('jiuye');
-    if(!state.primaryPath) state.primaryPath = state.paths[0];
-  }
   if(showFeedback){
-    toast(`已回写至全局行动计划：反推 ${gaps.length} 项技能补齐任务与 ${Math.min(jobIds.length,6)} 个投递节点 ✓`);
+    toast(`已同步至行动计划：反推 ${gaps.length} 项技能补齐任务与 ${Math.min(jobIds.length,6)} 个投递节点 ✓`);
   }
   return {gapCount:gaps.length, jobCount:jobIds.length};
 }
-function flowStepState(){
-  const p = state.profile;
-  const gate = checkProfileCompleteness(p);
-  const jobLinked = (state.jobs.savedIds?.length || 0) + (state.jobs.targetReqIds?.length || 0) > 0;
-  return [
-    {num:'01', label:'首页', mod:'dash', done:Boolean(p.school || p.courses.length || p.achievements.length || p.saved)},
-    {num:'02', label:'基础档案', mod:'profile', pg:0, done:Boolean(p.school && p.grade)},
-    {num:'03', label:'专业与课程', mod:'profile', pg:1, done:Boolean(p.major && (p.courses.length || p.deferredFields.includes('courses')))},
-    {num:'04', label:'经历工坊', mod:'profile', pg:2, done:Boolean(p.achievements.length || p.deferredFields.includes('achievements'))},
-    {num:'05', label:'时间与成果', mod:'profile', pg:3, done:gate.passed},
-    {num:'06', label:'档案预览', mod:'preview', done:Boolean(state.confirmed || p.saved)},
-    {num:'07', label:'路径优先级', mod:'paths', done:Boolean(state.paths.length && state.primaryPath)},
-    {num:'08', label:'专属诊断', mod:'diag', done:Boolean(state.paths.length && p.saved)},
-    {num:'09', label:'就业岗位库', mod:'jobs', done:jobLinked},
-    {num:'10', label:'冲突海图', mod:'conflict', done:Boolean(state.paths.length && (p.saved || state.confirmed))},
-  ];
-}
-function flowRibbonHTML(){
-  const steps = flowStepState();
-  return `<nav class="cc-flow-ribbon" aria-label="Course Compass 十步主流程">
-    ${steps.map((s, idx) => {
-      const isCur = (s.mod === 'profile' && state.module === 'profile' && state.profilePage === s.pg)
-        || (s.mod === 'profile' && s.pg === 2 && state.module === 'evidence')
-        || (s.mod !== 'profile' && state.module === s.mod);
-      const act = s.mod === 'profile' ? `data-action="flow-jump" data-module="profile" data-page="${s.pg}"` : `data-action="flow-jump" data-module="${s.mod}"`;
-      return `${idx ? '<span class="cc-flow-sep">→</span>' : ''}<button type="button" class="cc-flow-step ${isCur ? 'cur' : s.done ? 'done' : ''}" ${act}><b>${s.done && !isCur ? '✓' : s.num}</b>${s.label}</button>`;
-    }).join('')}
-  </nav>`;
-}
+function flowRibbonHTML(){ return ''; }
 function upstreamSyncBannerHTML(){
   const sync = state.upstreamSync;
-  if(!sync || !sync.revision) return '';
-  if(sync.dirtySinceConfirm){
-    return `<div class="cc-sync-banner dirty" role="status">
-      <div>⚡ <b>检测到上游「${esc(sync.lastChangedLabel || '个人档案')}」已变更：</b>原始事实已完整保留，当前诊断、岗位匹配与冲突海图已按最新数据实时重算（无需重复填写）。</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button type="button" class="btn small primary" data-action="nav" data-module="preview">去 06 更新归档快照 →</button>
-        <button type="button" class="btn small" data-action="nav" data-module="profile">回改档案</button>
-      </div>
-    </div>`;
-  }
-  const timeStr = sync.lastRecomputedAt ? sync.lastRecomputedAt.slice(11, 19) : '';
-  return `<div class="cc-sync-banner" role="status">
-    <div>🔄 <b>事实自动继承已同步：</b>最近变更「${esc(sync.lastChangedLabel || '档案确认')}」${timeStr ? `（${esc(timeStr)}）` : ''}，下游诊断、岗位匹配与时间冲突海图已实时重算。</div>
+  if(!sync || !sync.dirtySinceConfirm) return '';
+  return `<div class="cc-sync-banner dirty" role="status">
+    <div>⚡ <b>「${esc(sync.lastChangedLabel || '个人档案')}」已更新：</b>原始事实已保留，当前诊断、方向指数与冲突海图已实时重算。</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button type="button" class="btn small" data-action="nav" data-module="profile">修改上游事实</button>
-      <button type="button" class="btn small" data-action="nav" data-module="paths">调整路径优先级</button>
+      <button type="button" class="btn small primary" data-action="nav" data-module="preview">前往档案预览更新归档 →</button>
     </div>
   </div>`;
 }
@@ -4498,33 +4454,52 @@ function pct(p){ if(!p.rank||!p.rankTotal) return null; return p.rank/p.rankTota
 function gradeLabel(){ return state.profile.grade||'大三'; }
 
 /* ================= 诊断计算 ================= */
+function ccConsistentEmploymentDigest(now = new Date()){
+  const CC = window.CC;
+  if(!CC) return null;
+  const cp = CC.ccProfileFromState(state);
+  const reqs = ccPublicJobs();
+  const dirs = CC.careerDirections(
+    cp.personalized ? cp : {...cp, major:null, preferences:{}, completedCourseIds:[], completedCourseSkillIds:[], inProgressCourseIds:[], inProgressCourseSkillIds:[], evidences:[]},
+    reqs,
+    now
+  );
+  const catalog = dirs.filter(d => !d.excluded);
+  const topDir = catalog[0] || null;
+  const { chosen, matches } = ccHomeMatches(cp, reqs, now);
+  const featured = matches.slice(0, 4);
+  return { cp, reqs, dirs, catalog, topDir, chosen, matches, featured };
+}
 function feasibility(key){
   const p = state.profile, r = pct(p);
   if(key==='baoyan'){
-    if(r==null) return {label:'可行性 · 待补排名',detail:'填写排名与专业总人数后，这里会算出你距保研名额还差几名。'};
+    if(r==null) return {label:'可行性 · 待补排名',detail:'填写排名与专业总人数后，这里会算出你距保研名额还差几名；除普通推免外，还可关注前 30% 可报名的部分夏令营与支教保研。'};
     const need = Math.ceil(p.rankTotal*0.08);
     if(p.rank<=need) return {label:'可行性 · 中高',detail:`示例口径：你校保研率约 4.2%，名额多在前 8%。你的排名 <b>${p.rank}/${p.rankTotal}</b>（前 ${(r*100).toFixed(1)}%），已在推免圈内——现在每门课都在保卫这个名次。`};
-    return {label:'可行性 · '+(r<=0.15?'中低':'低'),detail:`示例口径：你校保研率约 4.2%，名额多在前 8%（约前 ${need} 名）。你的排名 <b>${p.rank}/${p.rankTotal}</b>（前 ${(r*100).toFixed(1)}%），差约 <b>${p.rank-need} 名</b>。大三上成绩仍计入，差距还能改。`};
+    return {label:'可行性 · '+(r<=0.15?'中低':r<=0.3?'可冲夏令营/专项':'偏紧'),detail:`示例口径：普通推免多在前 8%（约前 ${need} 名），你当前为 <b>${p.rank}/${p.rankTotal}</b>（前 ${(r*100).toFixed(1)}%）。${r<=0.3?'但不少外校夏令营与支教保研放宽至前 30%，别过早自我放弃。':'大三上成绩仍计入，也可同步了解其他路径。'}`};
   }
-  if(key==='kaoyan') return {label:'可行性 · 中',detail:'统考录取率约 14%；双非不是硬门槛，初试分才是。需确认目标院校报录比与参考书目——别凭感觉定目标。'};
+  if(key==='kaoyan') return {label:'可行性 · 开放统考',detail:'全国统考不唯本科出身，初试分数与目标院校报录比才是关键。建议上研招网核对 1–2 所目标院校历年复试线与专业课参考书目。'};
   if(key==='liuxue'){
-    if(p.gpa==null) return {label:'可行性 · 待补均分',detail:'填写均分后，这里会对照目标区间给出判断；语言成绩未记录，需预留 3–6 个月。'};
-    if(p.gpa>=85) return {label:'可行性 · 中高',detail:`均分 <b>${p.gpa}</b> 已达 G5 参考线（85+）；语言成绩未记录，需预留 3–6 个月。`};
-    if(p.gpa>=80) return {label:'可行性 · 中',detail:`均分 <b>${p.gpa}</b>：G5 需 85+ 偏紧，港校与部分英校可冲；缺语言成绩，需预留 3–6 个月。`};
-    return {label:'可行性 · 偏紧',detail:`均分 <b>${p.gpa}</b> 偏低，优先选门槛灵活的院校与项目；语言与背景提升要立刻开始。`};
+    if(p.gpa==null) return {label:'可行性 · 待补均分',detail:'填写均分后，这里会对照不同地区院校区间给出客观参考；语言成绩通常需预留 3–6 个月准备期。'};
+    if(p.gpa>=85) return {label:'可行性 · 区间宽裕',detail:`均分 <b>${p.gpa}</b> 已达英港新多数学位项目常见参考线（85+）；语言成绩未记录，建议预留 3–6 个月。`};
+    if(p.gpa>=80) return {label:'可行性 · 多档可选',detail:`均分 <b>${p.gpa}</b>：顶尖名校（85+）竞争较紧，但港校、英澳及欧陆仍有大量匹配项目可选；需尽早规划语言考试。`};
+    return {label:'可行性 · 择校取胜',detail:`均分 <b>${p.gpa}</b> 建议优先关注看重实践背景、均分门槛更灵活的院校与专业方向。`};
   }
-  const CC=window.CC;
-  if(CC){
-    const cp=CC.ccProfileFromState(state);
-    const fm=CC.forwardMatch(cp,CC.allRequirements().filter(r=>r.kind==='job'));
-    const best=cp.personalized&&fm.all.find(m=>m.eligibility.status!=='FAIL'&&!m.freshness.ended&&m.matchScore!=null);
-    if(!best) return {label:'可行性 · 待核验',detail:'去「就业·岗位库」查看真实岗位、资格和来源。'};
-    return {label:CC.ELIGIBILITY_LABEL[best.eligibility.status],detail:`匹配度靠前的岗位「<b>${esc(best.req.title)}</b>」指数 <b>${best.matchScore}/100</b>。去「就业·岗位库」查看证据和反推路线。`};
+  const digest = ccConsistentEmploymentDigest();
+  if(digest){
+    const { cp, topDir, matches } = digest;
+    if(!cp.personalized || !topDir) return {label:'可探索岗位库',detail:'前往「就业·岗位库」自由浏览各职业方向、真实招聘原文与资格要求。'};
+    const dirScoreTxt = topDir.signals.length && topDir.score != null ? `方向指数 <b>${topDir.score}/100</b>` : '按专业匹配探索';
+    const labelTxt = topDir.signals.length && topDir.score != null ? `推荐方向指数 · ${topDir.score}/100` : `可探索方向 · ${topDir.name}`;
+    return {
+      label:labelTxt,
+      detail:`与「就业·岗位库」同源测算：契合度靠前的探索方向为「<b>${esc(topDir.name)}</b>」（${dirScoreTxt}，在库 <b>${topDir.count}</b> 条岗位），当前无硬门槛阻拦岗位共 <b>${matches.length}</b> 条。`
+    };
   }
   const n = p.achievements.length;
-  if(n>=2) return {label:'可行性 · 中高',detail:`已有 <b>${n} 段经历</b>可拆成可核验证据。暑期实习是秋招最大的筹码。`};
+  if(n>=2) return {label:'可行性 · 中高',detail:`已有 <b>${n} 段经历</b>可拆成可核验证据。暑期实习是秋招的重要筹码。`};
   if(n===1) return {label:'可行性 · 中',detail:'已有 1 段经历可拆证据；再补一段可展示的项目，暑期实习投递会从容很多。'};
-  return {label:'可行性 · 待积累',detail:'档案里还没有成果记录。从最近一份课程作业开始——「作业变证据」模块 30 秒就能拆出第一组证据。'};
+  return {label:'可行性 · 待积累',detail:'档案里还没有成果记录。可从课程设计与专业实验起步，逐步转化为可验证的求职证据。'};
 }
 function thresholdExtra(key){
   const p = state.profile;
@@ -7589,39 +7564,24 @@ function ccSavedKanbanHTML(cp){
     </div>
   </section>`;
 }
-function ccJobsActionWritebackBanner(){
-  const linkedCount = new Set([...(state.jobs.savedIds || []), ...(state.jobs.targetReqIds || [])]).size;
-  const planTasks = (state.actionPlan || []).filter(x => x.source === 'job_gap' || x.source === 'job_apply');
-  if(!linkedCount && !planTasks.length) return '';
-  const gapTasks = planTasks.filter(x => x.source === 'job_gap').length;
-  const applyTasks = planTasks.filter(x => x.source === 'job_apply').length;
-  return `<div class="cc-sync-banner" style="margin-bottom:12px">
-    <div>🎯 <b>Step 09 目标岗位已联动回写：</b>当前已收藏/锁定 <b>${linkedCount}</b> 个目标岗位，自动反推 <b>${gapTasks}</b> 项技能缺口任务与 <b>${applyTasks}</b> 个投递节点写入全局行动计划。</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button type="button" class="btn small" data-action="nav" data-module="diag">查看 08 行动计划</button>
-      <button type="button" class="btn small primary" data-action="nav" data-module="conflict">生成 10 时间冲突海图 →</button>
-    </div>
-  </div>`;
-}
 function renderJobs(){
   const CC=window.CC,j=state.jobs;
   const cp=CC.ccProfileFromState(state);
-  const topChrome = `${flowRibbonHTML()}${upstreamSyncBannerHTML()}${ccJobsActionWritebackBanner()}`;
-  if(!state.profile.saved&&!j.quickExplore) return topChrome + jobsGateHTML();
+  if(!state.profile.saved&&!j.quickExplore) return jobsGateHTML();
   if(j.openJobId){
     const req=CC.REQ_BY_ID.get(j.openJobId);
     const m=req&&CC.forwardMatch(cp,[req]).all[0];
-    if(m) return topChrome + ccJobDetailView(m,cp);
+    if(m) return ccJobDetailView(m,cp);
     j.openJobId=null;
   }
-  if(j.viewMode==='live') return topChrome + ccLiveEngineView(cp);
-  if(j.viewMode==='calendar') return topChrome + ccCalendarView();
-  if(j.viewMode==='direction'||j.viewMode==='family') return topChrome + ccExploreView(cp);
-  if(j.viewMode==='pilot') return topChrome + (ccPilotEligible()?ccPilotView(cp):ccEmploymentHome(cp));
-  if(j.viewMode==='roadmap'&&cp.personalized) return `${topChrome}<div class="kicker">Step 09 · 就业岗位库</div><h1 class="page-title" tabindex="-1">我的成长路线</h1>
+  if(j.viewMode==='live') return ccLiveEngineView(cp);
+  if(j.viewMode==='calendar') return ccCalendarView();
+  if(j.viewMode==='direction'||j.viewMode==='family') return ccExploreView(cp);
+  if(j.viewMode==='pilot') return ccPilotEligible()?ccPilotView(cp):ccEmploymentHome(cp);
+  if(j.viewMode==='roadmap'&&cp.personalized) return `<div class="kicker">就业 · 岗位库</div><h1 class="page-title" tabindex="-1">我的成长路线</h1>
     ${ccEmploymentNav()}${ccDualEngineBarHTML()}${ccRouteHTML(cp)}`;
-  if(j.viewMode==='roadmap') return topChrome + ccEmploymentHome(cp);
-  return topChrome + (j.viewMode==='leads'?ccJobLeadsView():j.viewMode==='home'?ccEmploymentHome(cp):jobsSearchView(cp));
+  if(j.viewMode==='roadmap') return ccEmploymentHome(cp);
+  return j.viewMode==='leads'?ccJobLeadsView():j.viewMode==='home'?ccEmploymentHome(cp):jobsSearchView(cp);
 }
 function ccJobLeadsView(){
   const CC=window.CC,shared=CC.DATA.employmentLeads;
@@ -7650,16 +7610,14 @@ function ccJobLeadsView(){
 function jobsGateHTML(){
   const personas=ccPersonas();
   return `<div class="kicker">就业 · 岗位库</div>
-  <h1 class="page-title">真实岗位库 → <em>反推你的学习路线。</em></h1>
-  <p class="page-sub">已有简历可 10 秒自动建档；还没有简历或项目的同学，可直接用<b>已修专业课、课程设计（课设）与实验作业</b>接入求职起点，先选感兴趣的方向再对标岗位。</p>
-  <div class="card"><div class="label">选择你的起步方式</div>
-    <p class="muted" style="font-size:13px;margin:8px 0">已有简历可直接粘贴/上传（本机脱敏解析，绝不存手机号/邮箱）；暂无简历或项目时，你的课程设计与专业课就是最重要的求职匹配依据。</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-      <button class="btn primary" data-action="cc-open-resume-import">📄 已有简历 · 10 秒导入建档</button>
-      <button class="btn" style="border-color:var(--accent);color:var(--accent-deep)" data-action="cc-coursework-start">🎓 暂无简历/项目 · 用课程与课设起步 →</button>
-      <button class="btn" data-action="nav" data-module="profile">完整四步建档 →</button>
+  <h1 class="page-title">先探索感兴趣的方向，<em>再对表真实岗位要求。</em></h1>
+  <p class="page-sub">在「建立档案」录入的专业、课程、课程设计与项目经历会自动继承到这里参与匹配；也可以先免建档直接探索方向与岗位。</p>
+  <div class="card">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn primary" data-action="nav" data-module="profile">去建立个人档案 →</button>
+      <button class="btn" data-action="cc-quick">先直接探索方向与岗位 →</button>
     </div>
-    <div class="label" style="margin-top:18px">或免登录载入典型学生画像，直接体验</div>
+    <div class="label" style="margin-top:16px">或载入典型学生画像体验</div>
     <div class="scenario-row" style="margin-top:8px">${personas.map(x=>`<button class="sc-chip" data-action="cc-persona" data-id="${x.p.id}">${esc(x.label)}</button>`).join('')}</div>
   </div>`;
 }
@@ -7670,27 +7628,16 @@ function ccEmploymentNav(){
   return `<div class="seg cc-employment-nav">${pages.map(([key,label])=>`<button class="${j.viewMode===key?'on':''}" aria-pressed="${j.viewMode===key}" data-action="cc-view" data-mode="${key}">${label}</button>`).join('')}</div>`;
 }
 function ccProfileBar(cp){
-  const internTxt=cp.internWindow?' · 可实习：'+esc(cp.internWindow):'';
-  const targetCount=state.jobs.targetReqIds.length;
   const personas=ccPersonas();
   const switcher=`<select data-cc-switch-persona aria-label="切换演示画像" style="font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid var(--line2);background:var(--paper2)"><option value="">切换演示画像…</option>${personas.map(x=>`<option value="${esc(x.p.id)}" ${state.jobs.personaId===x.p.id?'selected':''}>${esc(x.p.name)} · ${esc(x.label)}</option>`).join('')}</select>`;
   const passedCourseCount=Math.max(cp.completedCourseIds.length,(state.profile.courses||[]).filter(c=>['已通过','已修','completed'].includes(c.status)).length);
   const cwCount=(cp.evidences||[]).filter(e=>window.CC.evidenceKindOf(e)==='coursework').length;
-  const expSummary=window.CC.hasHardcoreExperience(cp)?`成果 ${cp.evidences.length} 条`:(cwCount?`课设/实验 ${cwCount} 项（冷启动核心依据）`:`暂无项目（可接入课设）`);
-  return `<div class="card cc-profile-bar"><div><b>就业画像</b> · ${esc(cp.majorRaw||'专业待补充')} · ${cp.graduationYear?cp.graduationYear+' 届':'毕业届别待确认'} · ${cp.degree?window.CC.DEGREE_LABEL[cp.degree]:'学历待确认'} · 已修 ${passedCourseCount} 门 · ${expSummary}${internTxt}${targetCount?` · 目标 ${targetCount} 岗`:''}${state.jobs.personaId?' · 演示画像':''}</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${switcher}<button class="btn small" data-action="nav" data-module="profile">${state.profile.saved?'修改档案':'建立档案'} →</button></div></div>`;
-}
-function ccQuickToolsHTML(){
-  return `<div class="cc-quick-tools">
-    <button type="button" class="btn small primary" data-action="cc-open-resume-import">📄 一键导入整份简历（自动建档）</button>
-    <button type="button" class="btn small" data-action="cc-view" data-mode="live">⚡ 全网实时同步与31万仓</button>
-    <button type="button" class="btn small" data-action="cc-view" data-mode="calendar">📅 名企校招日历</button>
-    <button type="button" class="btn small" data-action="cc-quick-tool" data-tool="resume">✂️ 分段补充经历</button>
-    <button type="button" class="btn small" data-action="cc-quick-tool" data-tool="prefs">🎯 求职城市与薪资偏好</button>
-  </div>`;
+  const expSummary=window.CC.hasHardcoreExperience(cp)?`经历成果 ${cp.evidences.length} 项`:(cwCount?`已继承课设/实验 ${cwCount} 项`:`已修课 ${passedCourseCount} 门`);
+  return `<div class="card cc-profile-bar" style="padding:9px 14px;margin-bottom:10px"><div style="font-size:12.5px"><b>已继承档案：</b>${esc(cp.majorRaw||'专业待填')} · ${cp.graduationYear?cp.graduationYear+' 届':'届别待确认'} · ${expSummary}${state.jobs.personaId?' · 演示画像':''}</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${switcher}<button class="btn small" style="padding:3px 9px;min-height:28px" data-action="nav" data-module="profile">${state.profile.saved?'修改档案':'去建档'} →</button></div></div>`;
 }
 function ccPreferences(cp){
   const prefs=cp.preferences;
-  return `<details class="card cc-preferences" ${ccResumeDrafts.length?'open':''}><summary class="label">就业偏好与简历经历导入</summary>
+  return `<details class="card cc-preferences" ${ccResumeDrafts.length?'open':''}><summary class="label">求职偏好设置（目标城市 · 薪资 · 个性化开关）</summary>
     <form id="cc-preferences-form" class="cc-mini-form">
       <label>目标城市<input name="cities" value="${esc((prefs.cities||[]).join('、'))}" placeholder="例如 上海、苏州"></label>
       <label>期望月薪下限（元）<input name="salaryMin" type="number" min="0" max="1000000" value="${prefs.salaryMin??''}"></label>
@@ -7947,16 +7894,8 @@ function ccEmploymentHome(cp){
   const coreHomeGaps=rawHomeGaps.filter(g=>!CC.GENERIC_SKILL_IDS.has(g.skillId));
   const gaps=(coreHomeGaps.length?coreHomeGaps:rawHomeGaps).slice(0,3);
   const action=gaps[0];
-  const topScore=featured[0]?.matchScore;
-  const worthOrPriority=matches.filter(m=>m.tier==='priority'||m.tier==='worth').length;
-  const kpiStrip=cp.personalized?`<div class="cc-kpi-grid" aria-label="求职就绪度概览">
-    <div class="cc-kpi-card"><div class="k-label">无硬门槛阻拦</div><div class="k-val">${matches.length}</div><div class="k-sub">其中 ${worthOrPriority} 个值得投递/冲刺</div></div>
-    <div class="cc-kpi-card"><div class="k-label">推荐主攻方向</div><div class="k-val" style="font-size:17px;line-height:1.4">${esc(catalog[0]?.name||'待探索')}</div><div class="k-sub">${catalog[0]?catalog[0].count+' 条在库真实岗位':'选择专业获取推荐'}</div></div>
-    <div class="cc-kpi-card"><div class="k-label">当前最高匹配</div><div class="k-val">${topScore!=null?topScore+'/100':'待建档'}</div><div class="k-sub">${esc(featured[0]?.req.title?.slice(0,14)||'补充课设或成果可提分')}</div></div>
-    <div class="cc-kpi-card"><div class="k-label">优先补齐短板</div><div class="k-val" style="font-size:17px;line-height:1.4;color:var(--orange)">${esc(action?.skillName||'已齐备')}</div><div class="k-sub">${action?`约 ${action.hours} 小时可完成实战验收`:'可直接准备定制简历'}</div></div>
-  </div>`:'';
-  return `<div class="kicker">就业 · 先定感兴趣的方向 × 再按画像对表岗位</div><h1 class="page-title">先选定你感兴趣的职业方向，<em>再用课程/课设与项目精准对表岗位。</em></h1>
-    ${ccEmploymentNav()}${ccDualEngineBarHTML()}${ccProfileBar(cp)}${ccQuickToolsHTML()}${!state.profile.saved?`<form id="cc-quick-form" class="card cc-mini-form"><label>按专业探索 <input name="major" value="${esc(cp.majorRaw)}" placeholder="例如 机械电子工程"></label><button class="btn small primary" type="submit">更新探索方向</button></form>`:''}${ccPreferences(cp)}${ccCompareHTML(cp)}${kpiStrip}${ccCourseworkBridgeHTML(cp)}
+  return `<div class="kicker">就业 · 岗位库</div><h1 class="page-title">先探索感兴趣的职业方向，<em>再对表真实岗位与差距。</em></h1>
+    ${ccEmploymentNav()}${ccDualEngineBarHTML()}${ccProfileBar(cp)}${(!state.profile.saved&&!cp.majorRaw)?`<form id="cc-quick-form" class="card cc-mini-form"><label>按专业快速探索 <input name="major" value="${esc(cp.majorRaw)}" placeholder="例如 机械电子工程"></label><button class="btn small primary" type="submit">更新探索方向</button></form>`:''}${ccPreferences(cp)}${ccCompareHTML(cp)}
     <section class="cc-section"><div class="cc-job-top"><h2>方向与岗位族</h2><button class="btn small" data-action="cc-explore-more">${j.exploreMore?'收起其他方向':'探索其他方向'}</button></div>
       <div class="cc-direction-grid">${shown.map(d=>`<article class="card cc-direction-card"><div class="cc-job-top"><h3>${esc(d.name)}</h3>${cp.personalized?`<span class="tag blue">${d.score==null?'依据不足':d.signals.length?'方向指数 '+d.score+'/100':'按专业探索'}</span>`:''}</div>
         <div class="muted">${d.count} 条岗位 · ${d.excluded?'暂不考虑':cp.preferences.primaryDirectionId===d.id?'主方向':cp.preferences.secondaryDirectionIds.includes(d.id)?'次方向':'可探索'}</div>
@@ -8019,7 +7958,7 @@ function jobsSearchView(cp){
   const heading={list:'岗位列表',company:'按企业查看',saved:'收藏与投递'}[j.viewMode]||'岗位列表';
   return `<div class="kicker">就业 · 岗位库</div><h1 class="page-title">${heading}</h1>
   <p class="page-sub">${CC.distinctPostings(publicRecords).length} 个公开岗位 · ${publicRecords.length} 条来源记录。岗位状态和资格以详情中的来源与核验结果为准。</p>
-  ${ccEmploymentNav()}${ccDualEngineBarHTML()}${ccProfileBar(cp)}${ccQuickToolsHTML()}${ccPreferences(cp)}${ccCompareHTML(cp)}
+  ${ccEmploymentNav()}${ccDualEngineBarHTML()}${ccProfileBar(cp)}${ccPreferences(cp)}${ccCompareHTML(cp)}
   ${j.viewMode==='saved'?ccSavedKanbanHTML(cp):''}
   <div class="cc-search-wrap"><input id="cc-job-search" list="cc-job-suggest" type="search" aria-label="搜索岗位" placeholder="搜索专业、企业、岗位或技能" value="${esc(j.q)}" autocomplete="off"><datalist id="cc-job-suggest">${sugg.map(s=>`<option value="${esc(s)}">`).join('')}</datalist></div>
   <div id="cc-search-history">${ccSearchHistoryHTML()}</div>${filters}${sortRow}
@@ -8303,16 +8242,16 @@ policy_source {
 
 /* ================= 通用渲染 ================= */
 const MODULE_TITLES = {
-  dash:'01 航线首页',
-  profile:'02-05 建立个人事实档案',
-  evidence:'04 经历工坊（识别·包装·入库）',
-  preview:'06 档案预览与确认归档',
-  paths:'07 路径选择与优先级',
-  diag:'08 专属诊断与行动计划',
-  jobs:'09 就业·岗位库',
-  conflict:'10 时间冲突海图',
-  intel:'定向情报（辅助订阅）',
-  tech:'引擎与技术架构'
+  dash:'海图首页',
+  profile:'建立档案',
+  evidence:'经历工坊',
+  preview:'档案预览',
+  paths:'选择路径',
+  diag:'专属诊断',
+  jobs:'就业·岗位库',
+  conflict:'冲突海图',
+  intel:'定向情报',
+  tech:'引擎与技术'
 };
 function toast(msg,type,action){
   const t = document.createElement('div');
@@ -8332,7 +8271,7 @@ function toast(msg,type,action){
 }
 function renderChrome(){
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.module===state.module));
-  $('#crumb-title').textContent = MODULE_TITLES[state.module] || '航线首页';
+  $('#crumb-title').textContent = MODULE_TITLES[state.module] || '海图首页';
   const gy = tlGradYear();
   $('#date-chip').textContent = fmtDate(TODAY)+' · '+gradeLabel()+' · '+gy+' 届口径';
   const unread = state.radarRead?0:radarItems().length;
@@ -8352,13 +8291,12 @@ function renderChrome(){
   const p = state.profile;
   const dots = PATH_ORDER.map(k=>{
     const on = state.paths.includes(k);
-    const isPri = state.primaryPath === k || state.paths[0] === k;
-    return `<span class="sp-dot ${on?'on':''}" style="${on?'background:'+PATHS[k].color:''}" title="${PATHS[k].name}${on && isPri ? '（主路径）' : ''}"></span>`;
+    return `<span class="sp-dot ${on?'on':''}" style="${on?'background:'+PATHS[k].color:''}" title="${PATHS[k].name}"></span>`;
   }).join('');
   $('#side-profile').innerHTML = (p.saved || p.school || p.major)
     ? `<div class="sp-name">${esc(p.school||'未命名院校')}</div>
        <div class="sp-meta">${esc(p.major||'未填专业')} · ${esc(p.grade || '年级待填')}${p.rank&&p.rankTotal?` · 排名 ${p.rank}/${p.rankTotal}`:''}</div>
-       <div class="sp-meta" style="margin-top:3px;font-size:11px;color:#9fc9b3">${state.confirmed ? (state.upstreamSync?.dirtySinceConfirm ? '⚡ 草稿已更新·待重归档' : '✓ 档案已确认归档') : '📝 建档草稿进行中'}</div>
+       <div class="sp-meta" style="margin-top:3px;font-size:11px;color:#9fc9b3">${state.confirmed ? (state.upstreamSync?.dirtySinceConfirm ? '⚡ 草稿已更新' : '✓ 档案已确认') : '📝 档案草稿中'}</div>
        <div class="sp-dots">${dots}</div>`
     : `<div class="sp-name">档案未建立</div><div class="sp-meta">事实只录入一次，下游自动继承。</div>
        <button class="btn small primary" style="margin-top:9px;width:100%" data-action="nav" data-module="profile">去建立档案 →</button>`;
@@ -8387,28 +8325,24 @@ function pagerHTML(pages,cur,prevAction,nextAction,nextLabel,jumpAction=''){
 function nextProgressTarget(){
   const p = state.profile;
   const gate = checkProfileCompleteness(p);
-  if(!p.school.trim()) return {module:'profile', page:0, label:'02 建立基础档案'};
-  if(!p.major.trim()) return {module:'profile', page:1, label:'03 选择专业与课程'};
-  if(!gate.passed && !p.saved) return {module:'profile', page:3, label:'05 时间与成果完整性检查'};
-  if(!state.confirmed && !p.saved) return {module:'preview', label:'06 生成档案预览并确认归档'};
-  if(state.upstreamSync?.dirtySinceConfirm) return {module:'preview', label:'06 审阅更新后的能力档案'};
-  if(!state.paths.length) return {module:'paths', label:'07 选择路径并设主路径优先级'};
-  const hasTargetJobs = (state.jobs.savedIds?.length || 0) + (state.jobs.targetReqIds?.length || 0) > 0;
-  if(state.paths.includes('jiuye') && !hasTargetJobs) return {module:'jobs', label:'09 浏览岗位库并收藏目标岗位'};
-  return {module:'diag', label:'08 查看专属诊断与全局行动计划'};
+  if(!p.school.trim()) return {module:'profile', page:0, label:'补充基础档案'};
+  if(!p.major.trim()) return {module:'profile', page:1, label:'确认专业与课程'};
+  if(!gate.passed && !p.saved) return {module:'profile', page:3, label:'完成时间与成果核对'};
+  if(!state.confirmed && !p.saved) return {module:'preview', label:'确认个人能力档案'};
+  if(state.upstreamSync?.dirtySinceConfirm) return {module:'preview', label:'审阅更新后的档案'};
+  if(!state.paths.length) return {module:'paths', label:'自由选择考虑中的路径'};
+  return {module:'diag', label:'查看专属诊断与可能性'};
 }
 
-/* ================= 模块 01：航线首页 ================= */
+/* ================= 海图首页 ================= */
 function renderDash(){
   const p = state.profile;
   const hasProgress = Boolean(p.saved || state.confirmed || p.school.trim() || p.major.trim() || p.courses.length || p.achievements.length);
   const nextStep = nextProgressTarget();
   const counts = PATH_ORDER.map(k=>{
     const nh = nextHard(k), on = state.paths.includes(k), d = nh?daysTo(nh.date):null;
-    const priIdx = state.paths.indexOf(k);
-    const flagTxt = on ? (priIdx === 0 ? '★ 主路径 P1' : `已选 P${priIdx+1}`) : '未选择';
     return `<div class="count-card ${PATHS[k].tone} ${on?'':'dim'}">
-      <span class="cc-flag ${on?'on':'off'}">${flagTxt}</span>
+      <span class="cc-flag ${on?'on':'off'}">${on?'已关注':'可探索'}</span>
       <div class="cc-name"><span class="cc-letter">${PATHS[k].letter}</span>${PATHS[k].name}</div>
       <div class="cc-days num">${d!=null?d:'—'}<small>天</small></div>
       <div class="cc-event">${nh?'距「'+nh.e+'」（'+nh.t+'）':'窗口已过或未定'}</div>
@@ -8416,65 +8350,63 @@ function renderDash(){
   }).join('');
   const items = radarItems();
   const filtered = state.dashFilter==='all'?items:items.filter(i=>i.type===state.dashFilter);
-  const first = state.primaryPath || state.paths[0];
+  const first = state.paths[0];
   const topJobAction = (state.actionPlan || []).find(x => !x.done);
-  const weekTask = topJobAction ? `${topJobAction.title}（${topJobAction.detail}）` : (first ? PATHS[first].monday : '完成阶段一建档并在 Step 07 选定主路径后，这里将自动汇总你的优先行动任务。');
+  const weekTask = topJobAction ? `${topJobAction.title}（${topJobAction.detail}）` : (first ? PATHS[first].monday : '先去「选择路径」勾选你想了解的方向（可多选对比），这里会生成本周起步动作。');
   const weekDone = first && state.weeklyDone[first];
   return `
-  ${flowRibbonHTML()}
-  <div class="kicker">Step 01 · 航线首页 · 事实只录入一次，下游自动继承</div>
+  <div class="kicker">大学航线 · 打破升学与求职信息差</div>
   <h1 class="page-title">把看不见的赛跑，<em>摊在同一张海图上。</em></h1>
-  <p class="page-sub">遵循「阶段一建立可信事实档案 → 阶段二审阅确认能力档案 → 阶段三形成路径诊断与岗位目标 → 全局实时生成时间冲突海图」规范运行；AI 仅提供建议草稿，经你确认后才写入档案。</p>
-  <div class="scenario-row" style="margin:0 0 16px"><span class="muted" style="font-size:11.5px;align-self:center">免登录一键体验典型学生画像：</span>${ccPersonas().map(x=>`<button class="sc-chip ${state.jobs.personaId===x.p.id?'on':''}" data-action="cc-persona" data-id="${x.p.id}">${esc(x.label)}</button>`).join('')}<button class="sc-chip" data-action="demo-fill">载入双非文科跨考/求职样例</button></div>
+  <p class="page-sub">保研、考研、留学、就业——不替你把路定死，只把每条路的真实门槛、剩余窗口与可能性摆在你面前。客观事实只录入一次，下游自动继承。</p>
+  <div class="scenario-row" style="margin:0 0 16px"><span class="muted" style="font-size:11.5px;align-self:center">免登录一键体验典型画像：</span>${ccPersonas().map(x=>`<button class="sc-chip ${state.jobs.personaId===x.p.id?'on':''}" data-action="cc-persona" data-id="${x.p.id}">${esc(x.label)}</button>`).join('')}<button class="sc-chip" data-action="demo-fill">载入双非文科样例</button></div>
   <div class="dash-hero">
     <div class="hero-card">
-      <div class="kicker">${hasProgress ? '老用户 / 进行中档案 · 实时衔接' : '新用户起点 · 二选一建档起步'}</div>
+      <div class="kicker">${hasProgress ? '我的档案进度' : '我的起点'}</div>
       ${hasProgress?`
         <h2>${esc(p.school || '学校待填写')} · ${esc(p.major || '专业待确认')}</h2>
         <p style="font-size:13.5px;color:#cfe6d6;position:relative">${esc(p.grade || '年级待填')} · ${tlGradYear()} 届${p.rank&&p.rankTotal?` · 排名 ${p.rank}/${p.rankTotal}（前 ${(pct(p)*100).toFixed(1)}%）`:''}${p.gpa!=null?` · 均分 ${p.gpa}`:''} · 每周可投入 ${p.weeklyHours}h</p>
         <div class="hero-meta">
           <span class="hero-chip">${state.confirmed ? '✓ 已确认归档' : '📝 草稿待确认'}</span>
           <span class="hero-chip">课程 ${p.courses.length} 门</span>
-          <span class="hero-chip">经历成果 ${p.achievements.length} 段</span>
-          <span class="hero-chip">固定日程 ${(p.schedules||[]).length} 项</span>
-          ${state.paths.map((k,idx)=>`<span class="hero-chip" style="border-color:${PATHS[k].color};color:#fff;background:${PATHS[k].color}55">${idx===0?'★ 主路径: ':''}${PATHS[k].name}</span>`).join('')||'<span class="hero-chip">尚未设定路径优先级</span>'}
+          <span class="hero-chip">成果 ${p.achievements.length} 段</span>
+          ${state.paths.map(k=>`<span class="hero-chip" style="border-color:${PATHS[k].color};color:#fff;background:${PATHS[k].color}55">${PATHS[k].name}</span>`).join('')||'<span class="hero-chip">去探索四条路径可能性</span>'}
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;position:relative">
           <button class="btn primary" style="margin-top:0" data-action="continue-progress">▶ 继续上次进度 · ${esc(nextStep.label)} →</button>
-          <button class="btn" style="margin-top:0;background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)" data-action="nav" data-module="preview">查看 06 能力档案</button>
-          <button class="btn" style="margin-top:0;background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)" data-action="nav" data-module="conflict">查看 10 冲突海图</button>
+          <button class="btn" style="margin-top:0;background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)" data-action="nav" data-module="diag">专属诊断</button>
+          <button class="btn" style="margin-top:0;background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)" data-action="nav" data-module="conflict">冲突海图</button>
         </div>
       `:`
-        <h2>先建立可信个人事实档案，下游全程自动继承。</h2>
-        <p style="font-size:13.5px;color:#cfe6d6;position:relative">选择「新建档案」按 02→05 分步录入客观学籍、课程、经历与时间约束；或选择「导入简历」提取草稿经你核验后建档。暂无简历或项目的同学，可直接用已修课程与课设起步。</p>
+        <h2>先知道你在哪，才能看清你有多少种可能。</h2>
+        <p style="font-size:13.5px;color:#cfe6d6;position:relative">新建个人事实档案录入学校、专业、课程与已有经历，或直接导入简历提取草稿（由你确认后入库）。没有简历或项目的同学，用已修课与课设同样能起步。</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;position:relative">
-          <button class="btn primary" style="margin-top:0" data-action="start-new-profile">✨ 新建个人事实档案 →</button>
-          <button class="btn" style="margin-top:0;background:#fff;color:#122b24;border-color:#fff;font-weight:800" data-action="cc-open-resume-import">📄 导入简历自动提取草稿</button>
-          <button class="btn" style="margin-top:0;background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)" data-action="cc-coursework-home">🎓 无简历 · 用课程/课设起步</button>
+          <button class="btn primary" style="margin-top:0" data-action="start-new-profile">✨ 新建个人档案 →</button>
+          <button class="btn" style="margin-top:0;background:#fff;color:#122b24;border-color:#fff;font-weight:800" data-action="cc-open-resume-import">📄 导入简历提取草稿</button>
+          <button class="btn" style="margin-top:0;background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)" data-action="demo-fill">先用演示档案体验</button>
         </div>
       `}
     </div>
     <div class="week-card">
-      <div class="label">📌 当前最高优行动${first?' · 主路径 '+PATHS[first].name:''}</div>
+      <div class="label">📌 本周起步一件事${first?' · '+PATHS[first].name:''}</div>
       <div class="week-task ${weekDone?'muted':''}" style="${weekDone?'text-decoration:line-through':''}">${esc(weekTask)}</div>
-      ${first?`<label class="week-check ${weekDone?'done':''}"><input type="checkbox" data-action="week-done" data-path="${first}" ${weekDone?'checked':''}>${weekDone?'本周主线行动已完成 ✓':'完成后勾选，同步记录进度'}</label>`:`<button class="btn small" style="margin-top:14px;align-self:flex-start" data-action="nav" data-module="paths">去 07 选择路径并设优先级 →</button>`}
+      ${first?`<label class="week-check ${weekDone?'done':''}"><input type="checkbox" data-action="week-done" data-path="${first}" ${weekDone?'checked':''}>${weekDone?'本周已完成，下周见':'完成后勾选，记录进度'}</label>`:`<button class="btn small" style="margin-top:14px;align-self:flex-start" data-action="nav" data-module="paths">去选择想了解的路径 →</button>`}
     </div>
   </div>
-  <div class="label" style="margin:22px 0 10px">四路倒计时 · 距下一个硬日期（按 ${tlGradYear()} 届口径自动平移）</div>
+  <div class="label" style="margin:22px 0 10px">四路倒计时 · 距下一个硬日期（按 ${tlGradYear()} 届自动平移）</div>
   <div class="grid4 stagger">${counts}</div>
   <div style="display:flex;align-items:center;gap:12px;margin:26px 0 12px;flex-wrap:wrap">
-    <div class="label" style="margin:0">📡 信息雷达快览 · 辅助订阅不阻塞主流程</div>
+    <div class="label" style="margin:0">📡 信息雷达 · 你不知道你不知道的</div>
     <button class="btn small" data-action="radar-open" style="margin-left:auto">查看全部推送</button>
   </div>
   <div class="filter-row">${Object.entries(RADAR_TYPES).map(([k,v])=>`<button class="fchip ${state.dashFilter===k?'on':''}" data-action="dash-filter" data-f="${k}">${v}</button>`).join('')}</div>
-  <div class="radar-feed stagger">${filtered.length?filtered.map(i=>radarItemHTML(i,true)).join(''):'<div class="empty"><div class="big">🌊</div><h3>这一类暂时没有推送</h3><p>换个分类看看，或前往「定向情报」按路径订阅。</p></div>'}</div>`;
+  <div class="radar-feed stagger">${filtered.length?filtered.map(i=>radarItemHTML(i,true)).join(''):'<div class="empty"><div class="big">🌊</div><h3>这一类暂时没有推送</h3><p>换个分类看看，或前往「定向情报」按路径查看。</p></div>'}</div>`;
 }
 
-/* ================= 阶段一（02-05）：建立可信个人事实档案 ================= */
-const PROFILE_PAGES = ['02 基础档案','03 专业与课程','04 经历工坊','05 时间与成果'];
+/* ================= 建立个人事实档案 ================= */
+const PROFILE_PAGES = ['基础档案','专业与课程','经历工坊','时间与成果'];
 function rankPreview(p){
   const r = pct(p);
-  if(r === null) return '填写排名与总人数后，这里实时换算前百分比（未知可标记「稍后补充」）';
+  if(r === null) return '填写排名与总人数后，这里实时换算前百分比（暂不清楚可标记「稍后补充」）';
   return `当前排名：前 ${Number((r*100).toFixed(1))}%${r<=0.3?' · 已达多数夏令营常见门槛（前 30%）':' · 距夏令营常见门槛（前 30%）还有提升空间'}`;
 }
 function deferBadgeHTML(key, filled){
@@ -8486,24 +8418,24 @@ function renderCompletenessGate(p){
   const gate = checkProfileCompleteness(p);
   const cls = gate.missingCritical.length ? 'block' : gate.unresolvedOptional.length ? 'warn' : 'pass';
   const title = gate.missingCritical.length
-    ? `⛔ 流转网关：还有 ${gate.missingCritical.length} 项关键必填信息需补全`
+    ? `⛔ 档案完整度检查：还有 ${gate.missingCritical.length} 项必填基础信息需补全`
     : gate.unresolvedOptional.length
-      ? `⚠️ 流转网关：核心项已齐备，另有 ${gate.unresolvedOptional.length} 项非关键信息待确认`
-      : `✅ 流转网关：档案完整度检查通过${gate.deferredList.length ? `（含 ${gate.deferredList.length} 项已标记稍后补充）` : ''}`;
-  return `<section class="cc-gate-box ${cls}" id="completeness-gate" aria-label="档案完整度检查网关">
+      ? `⚠️ 档案完整度检查：核心项已齐备，另有 ${gate.unresolvedOptional.length} 项选填信息待确认`
+      : `✅ 档案完整度检查通过${gate.deferredList.length ? `（含 ${gate.deferredList.length} 项已标记稍后补充）` : ''}`;
+  return `<section class="cc-gate-box ${cls}" id="completeness-gate" aria-label="档案完整度检查">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
       <b style="font-size:15px">${title}</b>
-      <span class="muted" style="font-size:12px">通过后进入「阶段二 · 06 生成档案预览」</span>
+      <span class="muted" style="font-size:12px">核对无误后进入「档案预览」</span>
     </div>
     <div style="display:flex;flex-direction:column;gap:7px">
       ${gate.items.map(it => `<div class="list-row" style="margin:0;padding:8px 12px">
         <div class="lr-main">
-          <div class="lr-title" style="font-size:13px">${it.ok ? '✓' : it.deferred ? '⏳' : it.critical ? '❗' : '○'} ${esc(it.label)} <span class="tag ${it.critical ? 'blue' : ''}" style="font-size:10px">${it.critical ? '关键必填' : '可稍后补充'}</span></div>
+          <div class="lr-title" style="font-size:13px">${it.ok ? '✓' : it.deferred ? '⏳' : it.critical ? '❗' : '○'} ${esc(it.label)} <span class="tag ${it.critical ? 'blue' : ''}" style="font-size:10px">${it.critical ? '必填' : '可稍后补充'}</span></div>
           <div class="lr-sub">${esc(it.hint)}</div>
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           ${it.ok ? '<span class="tag" style="font-size:11px">已就绪</span>' : `
-            <button type="button" class="btn small" style="padding:3px 9px;min-height:28px;font-size:11.5px" data-action="profile-goto" data-page="${it.page}">去第 0${it.page+2} 步填写 →</button>
+            <button type="button" class="btn small" style="padding:3px 9px;min-height:28px;font-size:11.5px" data-action="profile-goto" data-page="${it.page}">去「${esc(it.pageName)}」填写 →</button>
             ${!it.critical ? `<button type="button" class="btn small" style="padding:3px 9px;min-height:28px;font-size:11.5px;${it.deferred?'background:var(--ambersoft);border-color:var(--amberline);color:var(--amber)':''}" data-action="defer-toggle" data-key="${it.key}">${it.deferred ? '已标稍后补充 ✓' : '稍后补充'}</button>` : ''}
           `}
         </div>
@@ -8511,11 +8443,11 @@ function renderCompletenessGate(p){
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line2)">
       ${gate.missingCritical.length
-        ? `<button type="button" class="btn primary" data-action="profile-goto" data-page="${gate.missingCritical[0].page}">← 退回第 0${gate.missingCritical[0].page+2} 步补全关键项</button>`
+        ? `<button type="button" class="btn primary" data-action="profile-goto" data-page="${gate.missingCritical[0].page}">← 返回「${esc(gate.missingCritical[0].pageName)}」补全必填项</button>`
         : gate.unresolvedOptional.length
-          ? `<button type="button" class="btn primary" data-action="gate-defer-all">将未填非关键项标为「稍后补充」，放行进入 06 档案预览 →</button>
+          ? `<button type="button" class="btn primary" data-action="gate-defer-all">未填项标为「稍后补充」，进入档案预览 →</button>
              <button type="button" class="btn" data-action="profile-goto" data-page="${gate.unresolvedOptional[0].page}">去补全缺失项</button>`
-          : `<button type="button" class="btn primary" data-action="goto-preview">检查通过 · 进入 06 生成档案预览 →</button>`
+          : `<button type="button" class="btn primary" data-action="goto-preview">进入档案预览 →</button>`
       }
     </div>
   </section>`;
@@ -8527,27 +8459,27 @@ function renderProfile(){
   if(pg===0){
     body = `<div class="card" id="basic-profile">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-        <div class="label" style="margin:0">Step 02 · 建立基础档案（核心必填项 vs 可稍后补充项）</div>
+        <div class="label" style="margin:0">基础学籍与成绩信息</div>
         <span class="tag blue">事实只录入一次 · 下游自动继承</span>
       </div>
       <div style="padding:12px 14px;border-radius:12px;background:var(--paper2);border:1px solid var(--line);margin-bottom:16px">
-        <div style="font-size:12.5px;font-weight:800;margin-bottom:10px;color:var(--accent-deep)">① 核心必填项（决定学籍起点与培养方案归属）</div>
+        <div style="font-size:12.5px;font-weight:800;margin-bottom:10px;color:var(--accent-deep)">核心必填项</div>
         <div class="form-grid">
           <div class="field"><label for="basic-school">就读学校 <span class="tag blue" style="font-size:10px">必填</span></label><input id="basic-school" data-field="school" value="${esc(p.school)}" placeholder="如：临江大学"></div>
-          <div class="field"><label for="basic-major">当前修读专业 <span class="tag blue" style="font-size:10px">必填 · 03 步自动继承</span></label><input id="basic-major" data-field="major" value="${esc(p.major)}" placeholder="如：计算机科学与技术 / 机械电子工程"></div>
+          <div class="field"><label for="basic-major">当前修读专业 <span class="tag blue" style="font-size:10px">必填</span></label><input id="basic-major" data-field="major" value="${esc(p.major)}" placeholder="如：计算机科学与技术 / 机械电子工程"></div>
           <div class="field"><label for="basic-grade">当前年级 <span class="tag blue" style="font-size:10px">必填</span></label><select id="basic-grade" data-field="grade"><option value="" ${!p.grade?'selected':''}>未填写</option>${GRADES.map(g=>`<option ${p.grade===g?'selected':''}>${g}</option>`).join('')}</select><span class="hint">按年级推算为 ${tlGradYear()} 届，下游时间线自动平移</span></div>
         </div>
       </div>
       <div style="padding:12px 14px;border-radius:12px;background:var(--paper);border:1px dashed var(--line2)">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-          <div style="font-size:12.5px;font-weight:800;color:var(--ink)">② 可稍后补充项（暂不清楚可留空或点「标记稍后补充」）</div>
+          <div style="font-size:12.5px;font-weight:800;color:var(--ink)">可稍后补充项（暂不清楚可留空或标记稍后补充）</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             ${deferBadgeHTML('gradDegree', Boolean(p.graduationDate && p.degree))}
             ${deferBadgeHTML('scores', Boolean(p.gpa !== null || (p.rank && p.rankTotal)))}
           </div>
         </div>
         <div class="form-grid">
-          <div class="field"><label for="cc-profile-graduation">预计毕业年月 <small>可稍后补充</small></label><input id="cc-profile-graduation" type="month" data-field="graduationDate" value="${esc(p.graduationDate||'')}"><span class="hint">用于精确核对校招岗位届别；留空则显示待核验。</span></div>
+          <div class="field"><label for="cc-profile-graduation">预计毕业年月 <small>可稍后补充</small></label><input id="cc-profile-graduation" type="month" data-field="graduationDate" value="${esc(p.graduationDate||'')}"><span class="hint">用于核对校招岗位届别；留空则显示待核验。</span></div>
           <div class="field"><label for="cc-profile-degree">预计取得学历 <small>可稍后补充</small></label><select id="cc-profile-degree" data-field="degree"><option value="">待确认</option>${Object.entries(window.CC.DEGREE_LABEL).map(([id,label])=>`<option value="${id}" ${p.degree===id?'selected':''}>${label}</option>`).join('')}</select></div>
           ${[['gpa','百分制均分','可稍后补充','min="0" max="100" step="any"','82'],['rank','专业排名','可稍后补充','min="1" step="1"','18'],['rankTotal','专业总人数','可稍后补充','min="1" step="1"','120']].map(([key,label,sub,limits,example])=>`
             <div class="field"><label for="basic-${key}">${label} <small>${sub}</small></label><input id="basic-${key}" type="number" ${limits} data-field="${key}" value="${p[key]??''}" placeholder="如：${example}" aria-describedby="error-${key}"><span class="field-error" id="error-${key}" aria-live="polite"></span></div>`).join('')}
@@ -8555,18 +8487,18 @@ function renderProfile(){
       </div>
       <div class="pct-preview" id="pct-preview" aria-live="polite">${rankPreview(p)}</div>
       <p id="basic-storage-error" class="field-error" role="status" hidden>浏览器未能保存档案。刷新后本次修改可能丢失。</p>
-      <div class="boundary"><b>隐私与真实性边界：</b>姓名、身份证、手机号一律不采集；未填项在下游诊断与冲突海图中明确标注「待补信息」，绝不编造伪精确结论。</div>
+      <div class="boundary"><b>隐私边界：</b>姓名、身份证、手机号一律不采集；未填项在下游诊断与冲突海图中明确标注「待补信息」，不生成伪精确结论。</div>
     </div>`;
   }else if(pg===1){
     const mode = state.courseMode;
     body = `<div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-        <div class="label" style="margin:0">Step 03 · 选择专业与课程（培养方案导入 / 专业推荐 / 手动添加）</div>
+        <div class="label" style="margin:0">选择专业与修读课程</div>
         ${deferBadgeHTML('courses', p.courses.length > 0)}
       </div>
       <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;padding:12px 14px;border-radius:12px;background:var(--paper2);border:1px solid var(--line);margin-bottom:16px">
-        <div class="field" style="flex:1;min-width:200px"><label for="step3-major">① 先确认你的专业（自动同步自 02 基础档案）</label><input id="step3-major" data-field="major" value="${esc(p.major)}" placeholder="输入或核对你的专业名称，如：计算机科学与技术"></div>
-        <button type="button" class="btn ${p.majorConfirmed && p.major ? '' : 'primary'}" data-action="confirm-major">${p.majorConfirmed && p.major ? '✓ 专业已确认：' + esc(p.major) : '确认专业并匹配方案'}</button>
+        <div class="field" style="flex:1;min-width:200px"><label for="step3-major">确认当前专业（与基础档案自动同步）</label><input id="step3-major" data-field="major" value="${esc(p.major)}" placeholder="输入或核对你的专业名称，如：计算机科学与技术"></div>
+        <button type="button" class="btn ${p.majorConfirmed && p.major ? '' : 'primary'}" data-action="confirm-major">${p.majorConfirmed && p.major ? '✓ 已确认：' + esc(p.major) : '确认专业并匹配方案'}</button>
       </div>
       ${state.courseReview ? renderCourseReview() : `
       <div class="seg" role="tablist">
@@ -8575,9 +8507,9 @@ function renderProfile(){
         <button class="${mode==='manual'?'on':''}" data-action="course-mode" data-mode="manual">✍️ 手动添加课程</button>
       </div>
       ${mode==='upload'?renderUploadPanel():mode==='recommend'?renderRecommendPanel(p):renderManualPanel()}`}
-      <div class="label" style="margin:20px 0 10px">③ 已录入课程清单 · 共 ${p.courses.length} 门（支持逐门切换「已通过 / 在修 / 未通过」）</div>
+      <div class="label" style="margin:20px 0 10px">已录入课程清单 · 共 ${p.courses.length} 门（可逐门切换「已通过 / 在修 / 未通过」）</div>
       ${courseListHTML(p)}
-      <div class="boundary"><b>课程作为冷启动资产：</b>你录入的专业必修课与<b>课程设计 / 综合实验</b>会自动被下游就业引擎继承识别；导入时支持记录培养方案版本与逐门重复核对。</div>
+      <div class="boundary"><b>冷启动自动继承：</b>你录入的专业课与<b>课程设计 / 综合实验</b>会自动被下游诊断和就业岗位库继承识别，无需在岗位库重复填写。</div>
     </div>`;
   }else if(pg===2){
     body = renderWorkshopCore(true);
@@ -8587,13 +8519,13 @@ function renderProfile(){
     const totalFixedHours = (p.schedules || []).reduce((sum, s) => sum + (Number(s.weeklyHours) || 0), 0);
     body = `
       <div class="cc-parallel-3">
-        <section class="cc-subcard" aria-label="05a 加入固定时间">
+        <section class="cc-subcard" aria-label="加入固定时间">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px">
-            <span class="tag blue">05a 加入时间</span>
+            <span class="tag blue">固定日程</span>
             ${deferBadgeHTML('schedules', (p.schedules||[]).length > 0)}
           </div>
-          <h3>固定日程与占用时段</h3>
-          <p class="muted" style="font-size:12px;margin-bottom:10px">记录课程、考试、实习及其他固定安排的起止日期与占用时段，直连 10 冲突海图。</p>
+          <h3>课程、考试与实习安排</h3>
+          <p class="muted" style="font-size:12px;margin-bottom:10px">记录固定安排的起止日期与占用时段，用于冲突海图核对撞期。</p>
           <div class="field" style="margin-bottom:8px"><label for="sch-cat">安排类别</label><select id="sch-cat">${SCHEDULE_CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('')}</select></div>
           <div class="field" style="margin-bottom:8px"><label for="sch-title">安排名称</label><input id="sch-title" placeholder="如：期末集中考试周 / 日常实习"></div>
           <div class="form-grid" style="gap:8px;margin-bottom:8px">
@@ -8605,7 +8537,7 @@ function renderProfile(){
             <div class="field"><label for="sch-hours">每周占用(h)</label><input id="sch-hours" type="number" min="0" max="60" value="8"></div>
           </div>
           <button type="button" class="btn small primary" style="width:100%;margin-bottom:10px" data-action="sch-add">＋ 添加固定安排</button>
-          ${(p.schedules||[]).length ? `<div style="font-size:11.5px;color:var(--muted);margin-bottom:6px">已录入 ${(p.schedules||[]).length} 项 · 合计固定占用 ${totalFixedHours}h/周</div>` + (p.schedules||[]).map((s, si) => `<div class="list-row" style="padding:8px 10px;margin-bottom:6px">
+          ${(p.schedules||[]).length ? `<div style="font-size:11.5px;color:var(--muted);margin-bottom:6px">已录入 ${(p.schedules||[]).length} 项 · 合计占用 ${totalFixedHours}h/周</div>` + (p.schedules||[]).map((s, si) => `<div class="list-row" style="padding:8px 10px;margin-bottom:6px">
             <div class="lr-main">
               <div class="lr-title" style="font-size:12.5px"><span class="tag" style="font-size:10px">${esc(s.category)}</span> ${esc(s.title)}</div>
               <div class="lr-sub">${esc(s.startDate || '近期')} → ${esc(s.endDate || '待定')}${s.slots ? ' · ' + esc(s.slots) : ''}${s.weeklyHours ? ` · ${s.weeklyHours}h/周` : ''}</div>
@@ -8614,10 +8546,10 @@ function renderProfile(){
           </div>`).join('') : '<div class="muted" style="font-size:12px;padding:8px 0">暂未添加固定日程；若暂不确定可点右上角「标记稍后补充」。</div>'}
         </section>
 
-        <section class="cc-subcard" aria-label="05b 可投入时间">
-          <div style="margin-bottom:6px"><span class="tag blue">05b 可投入时间</span></div>
-          <h3>每周负荷与可用窗口</h3>
-          <p class="muted" style="font-size:12px;margin-bottom:10px">设定课余可自由投入的小时数、可用时段与可实习时间，作为后续规划负荷硬约束。</p>
+        <section class="cc-subcard" aria-label="可投入时间">
+          <div style="margin-bottom:6px"><span class="tag blue">可投入时间</span></div>
+          <h3>每周负荷与实习窗口</h3>
+          <p class="muted" style="font-size:12px;margin-bottom:10px">设定课余可支配小时数、可用时段与可实习时间，作为后续规划负荷参考。</p>
           <p id="draft-status" class="muted" style="font-size:12px;font-weight:700;margin-bottom:10px" role="status">${esc(profileStatus())}</p>
           <div class="field" style="margin-bottom:12px"><label>每周可投入额外时间</label>
             <div class="range-wrap"><input type="range" aria-label="每周可用时间" min="1" max="40" step="1" data-field="weeklyHours" value="${Math.max(1, p.weeklyHours || 8)}"><span class="range-val num" id="hours-val" style="font-size:24px;min-width:82px">${p.weeklyHours}<small> h/周</small></span></div>
@@ -8638,13 +8570,13 @@ function renderProfile(){
           </div>
         </section>
 
-        <section class="cc-subcard" aria-label="05c 已有成果同步与核验">
+        <section class="cc-subcard" aria-label="已有成果同步与核验">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px">
-            <span class="tag blue">05c 已有成果</span>
+            <span class="tag blue">已有成果</span>
             ${deferBadgeHTML('achievements', p.achievements.length > 0)}
           </div>
           <h3>同步核验与遗漏补录</h3>
-          <p class="muted" style="font-size:12px;margin-bottom:10px">已自动同步 04 经历工坊中的 <b>${p.achievements.length}</b> 项成果；此处仅需补充遗漏项，并核验真实性与量化结果。</p>
+          <p class="muted" style="font-size:12px;margin-bottom:10px">自动同步「经历工坊」中的 <b>${p.achievements.length}</b> 项成果；此处仅需补充遗漏项，并核验真实性与量化结果。</p>
           <div class="add-row" style="margin-bottom:8px">
             <select id="ach-type" aria-label="成果类型"><option>实习实践</option><option>科研</option><option>项目</option><option>竞赛</option><option>课程作业</option><option>其他</option></select>
             <input id="ach-input" placeholder="补录遗漏成果名称…" aria-label="成果名称" style="min-width:130px">
@@ -8669,7 +8601,7 @@ function renderProfile(){
                 <button type="button" class="lr-del" style="width:24px;height:24px" data-action="ach-del" data-id="${esc(a.id)}" data-i="${i}" aria-label="删除${esc(a.title)}">✕</button>
               </div>
             </div>`;
-          }).join('') : '<div class="muted" style="font-size:12px;padding:8px 0">暂无成果记录；可回 04 经历工坊包装课设/实验，或标记稍后补充。</div>'}
+          }).join('') : '<div class="muted" style="font-size:12px;padding:8px 0">暂无成果记录；可回「经历工坊」包装课设/实验，或标记稍后补充。</div>'}
         </section>
       </div>
       ${renderCompletenessGate(p)}
@@ -8688,14 +8620,13 @@ function renderProfile(){
   const vCount = confirmedVersions().length;
   const gate = checkProfileCompleteness(p);
   const nextAct = pg < 3 ? 'profile-next' : (gate.missingCritical.length ? 'profile-next' : (gate.passed ? 'goto-preview' : 'gate-defer-all'));
-  const nextLbl = pg < 3 ? `下一步：${PROFILE_PAGES[pg+1]} →` : (gate.passed ? '通过检查 · 进入 06 档案预览 →' : '标记稍后补充并进入 06 档案预览 →');
+  const nextLbl = pg < 3 ? `下一步：${PROFILE_PAGES[pg+1]} →` : (gate.passed ? '进入档案预览 →' : '未填项稍后补充 · 进入档案预览 →');
   return `
-  ${flowRibbonHTML()}
-  <div class="kicker">阶段一 · 建立可信的个人事实档案（02 → 05）</div>
+  <div class="kicker">建立个人事实档案</div>
   <h1 class="page-title">事实只录入一次，<em>下游全链路自动继承。</em></h1>
   <p class="page-sub">客观采集学籍成绩、专业课程、经历证据与时间约束。系统建议均需由你核对确认后才写入档案。</p>
   <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
-    <button class="btn small primary" data-action="cc-open-resume-import">📄 导入整份简历自动提取草稿</button>
+    <button class="btn small primary" data-action="cc-open-resume-import">📄 导入整份简历提取草稿</button>
     <button class="btn small" data-action="profile-history">📜 查看历史档案（${vCount}）</button>
     ${ccVault.isAuthenticated()?`<span class="pill" style="margin:0">🔒 已加密绑定：${esc(ccVault.name())}</span>`:`<button class="btn small" data-action="account-open">🔐 本机加密账号</button>`}
     <button class="btn small" data-action="demo-fill">⚡ 一键填入演示档案</button>
@@ -8740,7 +8671,7 @@ function syncBasicProfile(focusError=false){
     p.rank = values.rank;
     p.rankTotal = values.rankTotal;
   }
-  markUpstreamChanged('02 基础档案信息');
+  markUpstreamChanged('基础档案信息');
   const prevEl = $('#pct-preview');
   if(prevEl) prevEl.textContent = errors.rank || errors.rankTotal ? '' : rankPreview(p);
   const stErr = $('#basic-storage-error');
@@ -8846,7 +8777,7 @@ function renderRecommendPanel(p){
   </div>`;
 }
 
-/* ================= 阶段二（06）：生成档案预览与确认归档 ================= */
+/* ================= 档案预览与确认归档 ================= */
 function renderPreview(){
   const CC = window.CC, p = state.profile;
   prepareAchievements(p.achievements);
@@ -8877,8 +8808,8 @@ function renderPreview(){
     <div class="cc-cap-grid">
       <section class="cc-subcard">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <h3>① 客观学籍与成绩背景</h3>
-          <button type="button" class="btn small" data-action="flow-jump" data-module="profile" data-page="0">修改 02</button>
+          <h3>客观学籍与成绩背景</h3>
+          <button type="button" class="btn small" data-action="flow-jump" data-module="profile" data-page="0">修改基础档案</button>
         </div>
         <div style="font-size:13.5px;line-height:1.85">
           <b>院校与专业：</b>${esc(p.school || '待填写')} · ${esc(p.major || '待填写')}<br>
@@ -8890,8 +8821,8 @@ function renderPreview(){
 
       <section class="cc-subcard">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <h3>② 固定日程与可投入负荷</h3>
-          <button type="button" class="btn small" data-action="flow-jump" data-module="profile" data-page="3">修改 05</button>
+          <h3>固定日程与可投入时间</h3>
+          <button type="button" class="btn small" data-action="flow-jump" data-module="profile" data-page="3">修改时间设置</button>
         </div>
         <div style="font-size:13.5px;line-height:1.85">
           <b>每周可自由投入：</b>${p.weeklyHours} 小时/周（可用：${(p.availableSlots||[]).join('、') || '待设'}）<br>
@@ -8903,8 +8834,8 @@ function renderPreview(){
 
       <section class="cc-subcard">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <h3>③ 专业课程矩阵（${p.courses.length} 门）</h3>
-          <button type="button" class="btn small" data-action="flow-jump" data-module="profile" data-page="1">修改 03</button>
+          <h3>专业课程矩阵（${p.courses.length} 门）</h3>
+          <button type="button" class="btn small" data-action="flow-jump" data-module="profile" data-page="1">修改课程</button>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
           <span class="tag">已通过 ${passedCourses.length}</span>
@@ -8916,8 +8847,8 @@ function renderPreview(){
 
       <section class="cc-subcard">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <h3>④ 客观提取技能图谱</h3>
-          <span class="tag blue">零主观自评 · 有据派生</span>
+          <h3>客观提取技能图谱</h3>
+          <span class="tag blue">有据派生</span>
         </div>
         <div style="margin-bottom:8px;font-size:12.5px"><b>✓ 已实证技能（${verifiedSkills.size}）：</b>${verifiedSkills.size ? [...verifiedSkills].map(sid=>`<span class="pill" style="margin:2px;background:var(--soft);border-color:var(--accent);color:var(--accent-deep)">${esc(CC.skillName(sid))}</span>`).join('') : '<span class="muted">确认成果属实后点亮</span>'}</div>
         <div style="font-size:12.5px"><b>◐ 课程接触 / 待补实证（${learnedSkills.size}）：</b>${learnedSkills.size ? [...learnedSkills].slice(0,14).map(sid=>`<span class="pill" style="margin:2px">${esc(CC.skillName(sid))}</span>`).join('') : '<span class="muted">录入专业课或待核验经历后自动派生</span>'}</div>
@@ -8926,8 +8857,8 @@ function renderPreview(){
 
     <section class="card" style="margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-        <h3 style="margin:0;font-family:var(--serif);font-size:17px">⑤ 经历与成果档案库（${p.achievements.length} 项）</h3>
-        <button type="button" class="btn small" data-action="flow-jump" data-module="profile" data-page="2">去 04 经历工坊新增/精修 →</button>
+        <h3 style="margin:0;font-family:var(--serif);font-size:17px">经历与成果档案库（${p.achievements.length} 项）</h3>
+        <button type="button" class="btn small" data-action="flow-jump" data-module="profile" data-page="2">去经历工坊新增/精修 →</button>
       </div>
       ${p.achievements.length ? p.achievements.map(a => {
         const verified = a.verificationStatus === 'user_confirmed' || a.verified;
@@ -8939,22 +8870,22 @@ function renderPreview(){
             ${a.desc ? `<div style="font-size:12.5px;margin-top:4px;line-height:1.6;white-space:pre-line">${esc(a.desc)}</div>` : ''}
           </div>
         </div>`;
-      }).join('') : '<p class="muted" style="font-size:13px">暂无经历与成果；无项目同学将在下游自动启用已修专业课与课设冷启动策略。</p>'}
+      }).join('') : '<p class="muted" style="font-size:13px">暂无独立经历与成果；下游将自动启用已修专业课与课程设计冷启动匹配。</p>'}
     </section>
 
     <section class="card" style="margin-bottom:16px;border-left:4px solid ${pendingVerifyAchs.length || gate.deferredList.length || gate.unresolvedOptional.length ? 'var(--amber)' : 'var(--accent)'}">
-      <h3 style="margin:0 0 8px;font-family:var(--serif);font-size:16px">⑥ 待核验项与「稍后补充」追踪清单</h3>
+      <h3 style="margin:0 0 8px;font-family:var(--serif);font-size:16px">待核验项与「稍后补充」清单</h3>
       ${(!pendingVerifyAchs.length && !gate.deferredList.length && !gate.unresolvedOptional.length)
-        ? '<p style="font-size:13px;color:var(--accent-deep);margin:0">✓ 当前全部已录入成果均已完成真实性确认，无挂起的待补充字段，可直接正式归档！</p>'
+        ? '<p style="font-size:13px;color:var(--accent-deep);margin:0">✓ 当前已录入内容均已核对完毕，无挂起的待补充字段，可直接确认归档。</p>'
         : `<ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.85">
-            ${pendingVerifyAchs.map(a => `<li>成果「<b>${esc(a.title)}</b>」${/\[待补充/.test(a.desc||'') ? '含有 <code>[待补充实测数据]</code> 占位符' : '尚未点击确认属实'} —— <button type="button" class="btn small" style="padding:1px 8px;min-height:24px" data-action="flow-jump" data-module="profile" data-page="3">去 05c 核验</button></li>`).join('')}
+            ${pendingVerifyAchs.map(a => `<li>成果「<b>${esc(a.title)}</b>」${/\[待补充/.test(a.desc||'') ? '含有 <code>[待补充实测数据]</code> 占位符' : '尚未点击确认属实'} —— <button type="button" class="btn small" style="padding:1px 8px;min-height:24px" data-action="flow-jump" data-module="profile" data-page="3">去核验</button></li>`).join('')}
             ${[...gate.deferredList, ...gate.unresolvedOptional].map(it => `<li>字段「<b>${esc(it.label)}</b>」当前${it.deferred ? '已标记为稍后补充' : '尚未填写'} —— <button type="button" class="btn small" style="padding:1px 8px;min-height:24px" data-action="flow-jump" data-module="profile" data-page="${it.page}">去补全</button></li>`).join('')}
           </ul>`
       }
     </section>`;
 
   const resumeSkeletonView = `
-    <div class="boundary" style="margin-bottom:14px"><b>阶段二原则说明：</b>此处仅用「基础简历视图」帮你检查客观经历的表述完整度，<b>不在选定方向与目标岗位前强行定稿最终简历</b>。锁定具体目标岗位后，可在「09 就业·岗位库」一键生成针对该岗位 JD 重点排序的定制 A4 简历。</div>
+    <div class="boundary" style="margin-bottom:14px"><b>预览说明：</b>此处仅用「基础简历视图」核查客观经历表述密度，<b>不在探索方向前强行定稿最终简历</b>。在「就业·岗位库」选定具体岗位后，可一键生成针对该岗位 JD 重点排序的定制 A4 简历。</div>
     <article class="cc-a4-sheet" aria-label="基础简历预览视图">
       <h3>${esc(p.school || '就读院校待填')} · ${esc(p.major || '专业待填')}</h3>
       <div class="muted" style="font-size:12.5px;margin-bottom:8px">${esc(p.grade || '')} · ${tlGradYear()} 届${p.degree && CC?.DEGREE_LABEL[p.degree] ? ' · ' + esc(CC.DEGREE_LABEL[p.degree]) : ''}${p.gpa != null ? ' · 均分 ' + p.gpa : ''}${p.rank && p.rankTotal ? ` · 排名 ${p.rank}/${p.rankTotal}` : ''} · 可实习：${esc(p.intern)}</div>
@@ -8965,16 +8896,15 @@ function renderPreview(){
         <div style="display:flex;justify-content:space-between;font-weight:700;font-size:13.5px"><span>${esc(a.title)}（${esc(a.type)}）</span><span>${a.verificationStatus==='user_confirmed'||a.verified?'已核验':'待核验草稿'}</span></div>
         ${a.role ? `<div style="font-size:12.5px;color:#355247">个人角色：${esc(a.role)}</div>` : ''}
         <div style="font-size:12.5px;line-height:1.65;white-space:pre-line">${esc(a.desc || '暂无详细描述')}</div>
-      </div>`).join('') : '<p style="font-size:13px;color:#555">暂无独立项目或实习经历（可在 04 经历工坊将核心课程实验/课设包装入库）。</p>'}
+      </div>`).join('') : '<p style="font-size:13px;color:#555">暂无独立项目或实习经历（可在「经历工坊」将核心课程实验/课设包装入库）。</p>'}
       <h4>客观技能清单</h4>
       <p style="font-size:13px;line-height:1.7">${[...verifiedSkills, ...learnedSkills].length ? [...verifiedSkills, ...learnedSkills].map(sid => esc(CC.skillName(sid))).join(' · ') : '待从课程与成果中提取'}</p>
     </article>`;
 
   return `
-  ${flowRibbonHTML()}
-  <div class="kicker">阶段二 · Step 06 · 确认能力档案，而非仓促定稿最终简历</div>
-  <h1 class="page-title">先确认你的客观能力底盘，<em>再衍生路径与目标岗位。</em></h1>
-  <p class="page-sub">集中核查阶段一录入的课程、经历、成果、技能与待核验项。确认归档后将生成不可篡改的版本快照，并正式进入阶段三路径规划。</p>
+  <div class="kicker">档案预览与确认</div>
+  <h1 class="page-title">先确认你的客观能力底盘，<em>再去自由探索所有可能的方向。</em></h1>
+  <p class="page-sub">集中核查已录入的课程、经历、成果、技能与待核验项。确认归档后将生成版本快照，下游所有诊断与匹配自动继承。</p>
   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px">
     <div class="seg" style="margin:0">
       <button type="button" class="${state.previewMode!=='resume'?'on':''}" data-action="preview-mode" data-mode="capability">🗂️ 结构化能力档案（默认）</button>
@@ -8990,127 +8920,89 @@ function renderPreview(){
   </div>
   ${state.previewMode === 'resume' ? resumeSkeletonView : capabilityView}
   <div class="pager">
-    <div class="dots"><span class="muted" style="font-size:13px">${state.confirmed ? `当前最新归档：${esc(versionLabel(state.confirmed, vCount - 1))}` : '尚未生成正式归档快照'}</span></div>
+    <div class="dots"><span class="muted" style="font-size:13px">${state.confirmed ? `当前最新归档：${esc(versionLabel(state.confirmed, vCount - 1))}` : '尚未生成归档快照'}</span></div>
     <div class="pbtns">
-      <button type="button" class="btn" data-action="flow-jump" data-module="profile" data-page="3">← 返回 05 补充时间与成果</button>
-      <button type="button" class="btn primary" data-action="profile-save">✓ 正式确认归档，进入 07 路径选择 →</button>
+      <button type="button" class="btn" data-action="flow-jump" data-module="profile" data-page="3">← 返回补充时间与成果</button>
+      <button type="button" class="btn primary" data-action="profile-save">✓ 确认归档，去探索路径 →</button>
     </div>
   </div>`;
 }
 
-/* ================= 阶段三（07）：路径选择与主次优先级 ================= */
+/* ================= 选择路径（开放多选 · 打破信息差） ================= */
 function renderPaths(){
   const cards = PATH_ORDER.map(k=>{
-    const P = PATHS[k], idx = state.paths.indexOf(k), sel = idx >= 0;
-    const priTag = sel ? (idx === 0 ? '★ 主路径 P1' : `优先级 P${idx + 1}`) : '';
+    const P = PATHS[k], sel = state.paths.includes(k);
     return `<button class="path-opt ${P.tone} ${sel?'sel':''}" data-action="path-toggle" data-path="${k}" aria-pressed="${sel}">
-      <span class="pcheck">${sel ? (idx === 0 ? '★' : idx + 1) : '✓'}</span><span class="pl">${P.letter}</span>
+      <span class="pcheck">✓</span><span class="pl">${P.letter}</span>
       <span class="pn">${P.name}</span>
-      ${priTag ? `<span class="tag" style="align-self:flex-start;margin-bottom:6px;background:${P.bg};color:${P.color};font-weight:800">${priTag}</span>` : ''}
       <span class="pd">${P.short}</span>
       <span class="pw">🗓 ${P.window}</span>
     </button>`;
   }).join('');
   const n = state.paths.length;
-  const weightHint = idx => idx === 0 ? '主路径 · 建议分配 ~65% 核心精力' : idx === 1 ? '第二顺位 · 建议分配 ~25% 协同备选精力' : '兜底观察 · 建议分配 ~10% 关键节点留底';
-  const priorityBox = n ? `<section class="card" id="path-priority-box" style="margin-bottom:18px" aria-label="主路径与优先级排序">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-      <div>
-        <div class="label" style="margin:0">② 设定主路径与投入优先级（必填约束 · 避免多路径平均用力）</div>
-        <p class="muted" style="font-size:12.5px;margin:4px 0 0">排在第 1 位的路径将作为你的<b>主路径（★ P1）</b>，下游专属诊断排序与冲突海图的每周负荷核算均按此优先级加权计算。</p>
-      </div>
-      <span class="tag blue">当前主路径：${esc(PATHS[state.paths[0]].name)}</span>
-    </div>
-    ${state.paths.map((k, idx) => {
-      const P = PATHS[k];
-      return `<div class="cc-priority-row ${idx===0?'primary':''}">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <span class="pl" style="width:26px;height:26px;border-radius:7px;background:${P.color};color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px">P${idx+1}</span>
-          <b>${P.name}</b>
-          <span class="tag ${idx===0?'':'blue'}" style="font-size:11px">${weightHint(idx)}</span>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center">
-          ${idx > 0 ? `<button type="button" class="btn small primary" style="padding:3px 9px;min-height:28px;font-size:11.5px" data-action="path-primary" data-path="${k}">★ 设为主路径</button>` : '<span class="pill" style="font-weight:800">★ 当前主攻</span>'}
-          <button type="button" class="btn small" style="padding:3px 8px;min-height:28px" data-action="path-move" data-path="${k}" data-dir="-1" ${idx===0?'disabled':''} aria-label="上移${P.name}">↑</button>
-          <button type="button" class="btn small" style="padding:3px 8px;min-height:28px" data-action="path-move" data-path="${k}" data-dir="1" ${idx===n-1?'disabled':''} aria-label="下移${P.name}">↓</button>
-        </div>
-      </div>`;
-    }).join('')}
-  </section>` : '';
-
   return `
-  ${flowRibbonHTML()}
   ${upstreamSyncBannerHTML()}
-  <div class="kicker">阶段三 · Step 07 · 路径选择与主路径优先级</div>
-  <h1 class="page-title">在保研、考研、留学、就业中多选，<em>并明确你的主航道。</em></h1>
-  <p class="page-sub">支持同时勾选多条考虑中的路径，但必须明确唯一<b>主路径（P1）与先后优先级</b>——把所有路径当成同等投入，往往意味着每条路都在关键窗口掉链子。</p>
-  ${!state.profile.saved?`<div class="boundary" style="margin:0 0 16px"><b>提示：个人档案尚未正式确认归档。</b>建议先完成 02–06 确认能力档案，或载入演示档案体验。<span style="display:inline-flex;gap:8px;margin-left:10px"><button class="btn small" data-action="nav" data-module="profile">去建档</button><button class="btn small" data-action="demo-fill">用演示档案</button></span></div>`:''}
+  <div class="kicker">选择路径 · 打破信息差</div>
+  <h1 class="page-title">你正在考虑哪几条路？<em>可以多选，也可以全选对比。</em></h1>
+  <p class="page-sub">我们不替你把路定死：先看看每条路的真实门槛、关键窗口还剩几天、哪些路径其实可以错峰同行。看清所有可能性之后，决定权永远在你手里。</p>
+  ${!state.profile.saved?`<div class="boundary" style="margin:0 0 16px"><b>提示：个人档案尚未确认归档。</b>诊断需要你的排名、均分与课程来核算真实门槛，可先去建档或载入演示档案体验。<span style="display:inline-flex;gap:8px;margin-left:10px"><button class="btn small" data-action="nav" data-module="profile">去建档</button><button class="btn small" data-action="demo-fill">用演示档案</button></span></div>`:''}
   <div class="picker-grid stagger">${cards}</div>
-  ${priorityBox}
   <div class="picker-bar">
-    <span class="count">${n?`已按优先级锁定 <b>${n}</b> 条路径：${state.paths.map((k,i)=>`${i===0?'★主路径 ':('P'+(i+1)+' ')}${PATHS[k].name}`).join(' → ')}`:'请至少勾选 1 条发展路径'}</span>
-    <button class="btn small" data-action="path-all">全选四条</button>
+    <span class="count">${n?`已选择 <b>${n}</b> 条路径探索：${state.paths.map(k=>PATHS[k].name).join(' + ')}`:'点选上方任意路径（支持多选对比）'}</span>
+    <button class="btn small" data-action="path-all">全选四条看看全貌</button>
     <button class="btn small" data-action="path-none">清空</button>
-    <button class="btn primary" data-action="go-diag" ${n?'':'disabled'}>确认主次路径，进入 08 专属诊断 →</button>
-  </div>`;
+    <button class="btn primary" data-action="go-diag" ${n?'':'disabled'}>查看专属诊断与可能性 →</button>
+  </div>
+  <div class="boundary"><b>这不是性格测评，也不替你设限。</b>很多人以为某条路没戏，只是因为不知道夏令营门槛、统考规则或课程设计的求职价值——先勾选看看客观事实，方向随时可以改。</div>`;
 }
 
-/* ================= 阶段三（08）：专属诊断与统一行动计划 ================= */
+/* ================= 专属诊断（自由切换探索 · 同源方向指数） ================= */
 function renderGlobalActionPlanHTML(){
-  const p = state.profile;
-  const pathActions = state.paths.map((k, idx) => ({
-    id:'path_mon_' + k,
-    isPath:true,
-    pathKey:k,
-    priority:`P${idx+1}${idx===0?' 主路径':''}`,
-    title:`[${PATHS[k].name}] ${PATHS[k].monday}`,
-    detail:`关键窗口：${PATHS[k].window}`,
-    hours:idx === 0 ? Math.max(4, Math.round((p.weeklyHours || 8) * 0.6)) : 2,
-    done:Boolean(state.weeklyDone[k]),
-  }));
   const jobActions = state.actionPlan || [];
-  const totalWeeklyNeed = pathActions.filter(x=>!x.done).reduce((s,x)=>s+x.hours,0)
-    + jobActions.filter(x=>!x.done && x.source==='job_gap').reduce((s,x)=>s+Math.ceil((x.hours||6)/2),0);
-  return `<section class="card" id="global-action-plan" style="margin-top:16px" aria-label="全局统一行动计划">
+  if(!jobActions.length) return '';
+  return `<section class="card" id="global-action-plan" style="margin-top:16px" aria-label="已关联岗位行动清单">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
       <div>
-        <div class="label" style="margin:0">📋 全局统一行动计划（路径里程碑 + 09 就业岗位库反推回写）</div>
-        <p class="muted" style="font-size:12.5px;margin:4px 0 0">在「09 就业·岗位库」收藏或设为目标岗位后，反推的技能缺口任务与投递节点会自动回写到此处，并同步计入 10 冲突海图负荷。</p>
+        <div class="label" style="margin:0">📋 目标岗位反推行动清单（同步自就业·岗位库）</div>
+        <p class="muted" style="font-size:12.5px;margin:4px 0 0">基于你在岗位库收藏或设为反推目标的职位自动生成，可勾选记录完成进度。</p>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <span class="tag ${totalWeeklyNeed > p.weeklyHours ? 'warn' : 'blue'}">当前待办周均需约 ${totalWeeklyNeed}h / 可投入 ${p.weeklyHours}h</span>
-        <button type="button" class="btn small primary" data-action="nav" data-module="jobs">去 09 岗位库挑选/收藏目标岗 →</button>
-      </div>
+      <button type="button" class="btn small" data-action="nav" data-module="jobs">去岗位库调整目标岗 →</button>
     </div>
-    ${pathActions.map(item => `<div class="list-row" style="margin-bottom:7px">
-      <input type="checkbox" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer" data-action="week-done" data-path="${item.pathKey}" ${item.done?'checked':''} aria-label="${esc(item.title)}">
-      <div class="lr-main">
-        <div class="lr-title" style="${item.done?'text-decoration:line-through;opacity:.65':''}"><span class="tag" style="font-size:10px">${esc(item.priority)}</span> ${esc(item.title)}</div>
-        <div class="lr-sub">${esc(item.detail)} · 建议周投入 ~${item.hours}h</div>
-      </div>
-    </div>`).join('')}
-    ${jobActions.length ? jobActions.map(item => `<div class="list-row" style="margin-bottom:7px;border-left:3px solid var(--blue)">
+    ${jobActions.map(item => `<div class="list-row" style="margin-bottom:7px;border-left:3px solid var(--blue)">
       <input type="checkbox" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer" data-action="action-plan-toggle" data-id="${esc(item.id)}" ${item.done?'checked':''} aria-label="${esc(item.title)}">
       <div class="lr-main">
-        <div class="lr-title" style="${item.done?'text-decoration:line-through;opacity:.65':''}"><span class="tag blue" style="font-size:10px">${item.source==='job_gap'?'09 技能缺口反推':'09 投递节点回写'}</span> ${esc(item.title)}</div>
-        <div class="lr-sub">${esc(item.detail)}${item.hours ? ` · 预计总工时 ${item.hours}h` : ''}</div>
+        <div class="lr-title" style="${item.done?'text-decoration:line-through;opacity:.65':''}"><span class="tag blue" style="font-size:10px">${item.source==='job_gap'?'技能补齐':'投递跟进'}</span> ${esc(item.title)}</div>
+        <div class="lr-sub">${esc(item.detail)}${item.hours ? ` · 预计约 ${item.hours}h` : ''}</div>
       </div>
       ${item.jobId ? `<button type="button" class="btn small" style="padding:3px 8px;min-height:26px;font-size:11.5px" data-action="action-open-job" data-id="${esc(item.jobId)}">查看岗位 ↗</button>` : `<button type="button" class="btn small" style="padding:3px 8px;min-height:26px;font-size:11.5px" data-action="action-open-roadmap" data-skill="${esc(item.skillId||'')}">学习路线 →</button>`}
-    </div>`).join('') : `<div class="boundary" style="margin-top:8px"><b>尚未关联具体目标岗位：</b>前往「09 就业·岗位库」收藏心仪岗位或设为反推目标，系统将自动反推缺失技能、学习路线与投递截止日并回写到这里。</div>`}
+    </div>`).join('')}
   </section>`;
 }
 function renderDiag(){
   if(!state.paths.length){
+    const quickCards = PATH_ORDER.map(k=>{
+      const P = PATHS[k];
+      return `<button class="path-opt ${P.tone}" data-action="diag-add-path" data-path="${k}">
+        <span class="pcheck">＋</span><span class="pl">${P.letter}</span>
+        <span class="pn">${P.name}</span><span class="pd">${P.short}</span>
+        <span class="pw">🗓 ${P.window}</span>
+      </button>`;
+    }).join('');
     return `
-    ${flowRibbonHTML()}
-    <div class="kicker">阶段三 · Step 08 · 专属诊断</div>
-    <h1 class="page-title">先确定路径与优先级，<em>再生成专属诊断。</em></h1>
-    <div class="empty" style="margin-top:18px"><div class="big">🧭</div><h3>还没有选择路径</h3><p>请先在 Step 07 选择考虑中的路径并指定主路径（P1），系统将结合你的档案输出门槛、资格、技能差距与行动清单。</p>
-    <button class="btn primary" style="margin-top:14px" data-action="nav" data-module="paths">← 去 07 选择路径与优先级</button></div>`;
+    ${upstreamSyncBannerHTML()}
+    <div class="kicker">专属诊断 · 由你自己选择探索方向</div>
+    <h1 class="page-title">点选你想了解的路，<em>打破信息差，看见更多可能。</em></h1>
+    <p class="page-sub">不预设唯一答案——点击任意一条路径即可查看基于你个人档案测算的真实门槛、隐藏机会与关键时间节点，也可一键展开全部四条路径对比。</p>
+    <div class="picker-grid stagger">${quickCards}</div>
+    <div class="picker-bar">
+      <span class="count">点击任意卡片即可开启诊断，可随时增减对比路径</span>
+      <button class="btn primary" data-action="path-all">一键展开四条路径全貌 →</button>
+    </div>`;
   }
   const idx = Math.min(state.diagIndex,state.paths.length-1);
   const key = state.paths[idx], P = PATHS[key], p = state.profile;
   const f = feasibility(key), nh = nextHard(key), d = nh?daysTo(nh.date):null;
+  const unselectedPaths = PATH_ORDER.filter(k => !state.paths.includes(k));
   const nodes = tlNodes(key).map(n=>`
     <div class="tl-node ${n.s}">
       <div class="tl-date">${n.t}</div>
@@ -9121,61 +9013,66 @@ function renderDiag(){
   const r = pct(p);
   let jiuyeRoute='';
   if(key==='jiuye'&&window.CC){
-    const cp=window.CC.ccProfileFromState(state);
-    const fm=window.CC.forwardMatch(cp,window.CC.allRequirements().filter(q=>q.kind==='job'));
-    const best=cp.personalized&&fm.all.find(m=>m.eligibility.status!=='FAIL'&&!m.freshness.ended&&m.matchScore!=null);
-    const topGaps = window.CC.computeGaps ? window.CC.computeGaps(cp, (state.jobs.targetReqIds?.length ? state.jobs.targetReqIds : best ? [best.req.id] : [])).slice(0, 3) : [];
-    jiuyeRoute=`<div class="translate-card" style="margin-top:12px;border-left:4px solid #1E3F32">
-      <div class="label">🎯 就业资格状态与核心技能差距 <span class="tag blue">实时继承自档案</span></div>
-      <p style="font-size:13px;margin:6px 0;line-height:1.6">${best?`当前综合匹配度最高岗位：「<b>${esc(best.req.title)}</b>」（${esc(best.req.org||'')}）· 匹配指数 <b>${best.matchScore}/100</b> · 资格状态：<b>${window.CC.ELIGIBILITY_LABEL[best.eligibility.status]}</b>。`:'前往岗位库按方向筛选岗位，系统将逐条核验你的届别、学历与技能证据。'}</p>
-      ${topGaps.length ? `<div style="font-size:12.5px;margin:6px 0"><b>优先补齐技能差距：</b>${topGaps.map(g=>`<span class="pill" style="margin:2px">${esc(g.skillName)}（${g.status==='learned_unverified'?'待补实证':'缺口'}·${g.hours}h）</span>`).join('')}</div>` : ''}
-      <button class="btn small primary" style="margin-top:8px" data-action="nav" data-module="jobs">进入 09 就业·岗位库挑选并反推 →</button>
+    const digest = ccConsistentEmploymentDigest();
+    const topDir = digest?.topDir;
+    const topGaps = digest?.cp.personalized && window.CC.computeGaps
+      ? window.CC.computeGaps(digest.cp, (state.jobs.targetReqIds?.length ? state.jobs.targetReqIds : (digest.featured || []).map(m => m.req.id))).filter(g => !window.CC.GENERIC_SKILL_IDS.has(g.skillId)).slice(0, 3)
+      : [];
+    const dirBadge = topDir ? (topDir.signals.length && topDir.score != null ? `方向指数 ${topDir.score}/100` : '按专业探索') : '待探索';
+    jiuyeRoute=`<div class="translate-card" id="diag-jiuye-summary" style="margin-top:12px;border-left:4px solid #1E3F32">
+      <div class="label">🎯 推荐探索方向与岗位库同源对表 <span class="tag blue">${esc(dirBadge)}</span></div>
+      <p style="font-size:13px;margin:6px 0;line-height:1.6">${topDir ? `根据你的专业、课程与经历，优先推荐探索「<b>${esc(topDir.name)}</b>」（<b>${esc(dirBadge)}</b> · 收录 ${topDir.count} 条真实岗位，你也可以在岗位库自由切换探索其他方向）；当前无硬门槛阻拦岗位共 <b>${digest.matches.length}</b> 条。` : '前往「就业·岗位库」自由探索各职业方向与岗位族要求。'}</p>
+      ${topGaps.length ? `<div style="font-size:12.5px;margin:6px 0"><b>该方向常见可补技能：</b>${topGaps.map(g=>`<span class="pill" style="margin:2px">${esc(g.skillName)}（${g.status==='learned_unverified'?'待补实证':'缺口'}·${g.hours}h）</span>`).join('')}</div>` : ''}
+      <button class="btn small primary" style="margin-top:8px" data-action="nav" data-module="jobs">去就业·岗位库自由探索方向与岗位 →</button>
     </div>`;
   }
   return `
-  ${flowRibbonHTML()}
   ${upstreamSyncBannerHTML()}
   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-    <div class="kicker" style="margin:0">阶段三 · Step 08 · 专属诊断（结合已确认档案 × 路径优先级）</div>
+    <div class="kicker" style="margin:0">专属诊断 · 按档案客观计算 · 方向由你自己选择</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button type="button" class="btn small" data-action="nav" data-module="paths">← 调整路径优先级 (07)</button>
-      <button type="button" class="btn small" data-action="nav" data-module="profile">✎ 补充个人档案 (02-05)</button>
+      <button type="button" class="btn small" data-action="nav" data-module="paths">重选/增减路径</button>
+      <button type="button" class="btn small" data-action="nav" data-module="profile">补充个人档案</button>
     </div>
   </div>
-  <h1 class="page-title">按主次优先级，<em>看清门槛、差距与关键窗口。</em></h1>
+  <h1 class="page-title">你选的路，<em>真实门槛与关键窗口在哪一天？</em></h1>
   <div class="diag-banner">
-    <span style="font-weight:800">继承档案依据：</span>
+    <span style="font-weight:800">诊断依据：</span>
     <span class="chip">${esc(p.school||'演示院校')}</span>
     <span class="chip">${esc(p.major||'演示专业')} · ${esc(p.grade)}</span>
-    ${r!=null?`<span class="chip">排名 ${p.rank}/${p.rankTotal}</span>`:'<span class="chip">排名待补充</span>'}
-    ${p.gpa!=null?`<span class="chip">均分 ${p.gpa}</span>`:'<span class="chip">均分待补充</span>'}
-    <span class="chip">每周可投入 ${p.weeklyHours}h</span>
-    ${!p.saved?'<span class="chip" style="border-color:#f0c36d;color:#f0c36d">草稿态 · 建议在 06 确认归档</span>':''}
+    ${r!=null?`<span class="chip">排名 ${p.rank}/${p.rankTotal}</span>`:''}
+    ${p.gpa!=null?`<span class="chip">均分 ${p.gpa}</span>`:''}
+    <span class="chip">每周 ${p.weeklyHours}h</span>
+    ${!p.saved?'<span class="chip" style="border-color:#f0c36d;color:#f0c36d">草稿态</span>':''}
   </div>
-  <div class="diag-tabs">${state.paths.map((k,i)=>`<button class="dtab ${PATHS[k].tone} ${i===idx?'on':''}" data-action="diag-tab" data-i="${i}"><i></i>${i===0?'★ 主路径 P1':`P${i+1}`} · ${PATHS[k].name}</button>`).join('')}</div>
+  <div class="diag-tabs" style="align-items:center">
+    ${state.paths.map((k,i)=>`<button class="dtab ${PATHS[k].tone} ${i===idx?'on':''}" data-action="diag-tab" data-i="${i}" data-path="${k}"><i></i>${PATHS[k].letter} · ${PATHS[k].name}</button>`).join('')}
+    ${unselectedPaths.length ? `<span class="muted" style="font-size:12px;margin-left:6px">更多可能：</span>` + unselectedPaths.map(k=>`<button type="button" class="fchip" style="font-size:11.5px;padding:4px 10px" data-action="diag-add-path" data-path="${k}">＋ 看看${PATHS[k].name}</button>`).join('') : ''}
+  </div>
   <div class="card ${P.tone}" style="border-left:5px solid var(--tone)">
     <div class="diag-head">
-      <h3>${idx===0?'★ 主路径':'次选路径 P'+(idx+1)} · ${P.name} <span class="verdict">${f.label}</span></h3>
+      <h3>${P.letter} · ${P.name} <span class="verdict">${f.label}</span></h3>
       ${d!=null?`<span class="remain-badge">距「${nh.e}」约 ${d} 天</span>`:''}
     </div>
     <p class="threshold-line">${f.detail} ${thresholdExtra(key)}</p>
     <div class="tl-track">${nodes}</div>
     <div class="diag-actions">
       <div class="monday-card">
-        <div class="label">📌 本路径当前关键动作</div>
+        <div class="label">📌 本周一件事</div>
         <div class="m-task">${P.monday}</div>
         <label class="week-check ${state.weeklyDone[key]?'done':''}" style="margin-top:10px"><input type="checkbox" data-action="week-done" data-path="${key}" ${state.weeklyDone[key]?'checked':''}>${state.weeklyDone[key]?'已完成':'完成后勾选'}</label>
       </div>
       <div class="translate-card">
-        <div class="label">经历转化与证据强化</div>
+        <div class="label">经历转化与项目包装</div>
         <p>${P.translate}</p>
-        <button class="btn small" style="margin-top:10px" data-action="nav" data-module="evidence">去 04 经历工坊包装证据 →</button>
+        <button class="btn small" style="margin-top:10px" data-action="nav" data-module="evidence">去经历工坊包装证据 →</button>
       </div>
     </div>
     ${jiuyeRoute}
   </div>
   ${renderGlobalActionPlanHTML()}
-  ${pagerHTML(state.paths.map((k,i)=>`P${i+1} ${PATHS[k].name}`),idx,'diag-prev',idx===state.paths.length-1?'diag-to-conflict':'diag-next',idx===state.paths.length-1?'前往 10 实时时间冲突海图 →':'下一优先级路径 →')}`;
+  ${pagerHTML(state.paths.map(k=>PATHS[k].name),idx,'diag-prev',idx===state.paths.length-1?'diag-to-conflict':'diag-next',idx===state.paths.length-1?'看路径时间冲突海图 →':'看下一条路 →')}
+  <div class="statement">每个节点只写<em>事实与后果</em>，不替你做价值判断。家庭经济、性格、风险偏好——AI 没有资格替你选。</div>`;
 }
 
 /* ================= 模块3.5：定向情报 ================= */
@@ -9295,7 +9192,7 @@ function renderIntel(){
     <div class="boundary"><span class="b-ico">🧠</span><div>当前为<b>规则引擎 v0</b>（可解释、零模型依赖）。后续接入小模型做重排与摘要，接口已预留：<code>POST /api/intel/rerank</code>。技术实现见 <button class="btn btn-sm btn-ghost" data-action="nav" data-module="tech" style="padding:2px 8px">引擎与技术 →</button></div></div>`;
 }
 
-/* ================= 全局输出（10）：实时时间冲突海图 ================= */
+/* ================= 实时时间冲突海图 ================= */
 function conflictSVG(){
   const gy = tlGradYear(), cy = gy - 1, yy = String(cy).slice(2);
   const lanes = [
@@ -9306,21 +9203,19 @@ function conflictSVG(){
   ];
   const laneHTML = lanes.map((L,li)=>{
     const on = state.lanes.includes(L.k), P = PATHS[L.k];
-    const priIdx = state.paths.indexOf(L.k);
-    const sel = priIdx >= 0;
-    const op = on ? (priIdx === 0 ? 1 : sel ? .78 : .35) : .12;
-    const badgeTxt = priIdx === 0 ? ' ★P1' : sel ? ` P${priIdx+1}` : '';
+    const sel = state.paths.includes(L.k);
+    const op = on ? (sel ? 1 : .55) : .14;
     return `<g opacity="${op}" style="transition:opacity .3s">
-      <text x="26" y="${L.y+21}" font-size="12.5" font-weight="${priIdx===0?'900':'700'}" fill="#1c2f28">${P.name}${badgeTxt}</text>
+      <text x="42" y="${L.y+21}" font-size="13" font-weight="700" fill="#1c2f28">${P.name}${sel?' ●':''}</text>
       ${L.bars.map((b,bi)=>`<g class="lane-rect" style="animation-delay:${li*.12+bi*.08}s">
-        <rect x="${b.x}" y="${L.y}" width="${b.w}" height="28" rx="6" fill="${b.light?P.bg:P.color}" stroke="${P.color}" stroke-width="${priIdx===0?2:(b.light?.8:0)}" opacity="${b.light?1:.9}"/>
+        <rect x="${b.x}" y="${L.y}" width="${b.w}" height="28" rx="6" fill="${b.light?P.bg:P.color}" stroke="${P.color}" stroke-width="${b.light?.8:0}" opacity="${b.light?1:.88}"/>
         <text x="${b.x+b.w/2}" y="${L.y+18}" font-size="10.5" font-weight="600" fill="${b.light?P.color:'#fff'}" text-anchor="middle">${b.t}</text>
       </g>`).join('')}
     </g>`;
   }).join('');
   return `<svg viewBox="0 0 720 440" width="100%" role="img" aria-label="四条路径${cy}年冲突时间轴" style="font-family:'Manrope','Microsoft YaHei',sans-serif">
-    <text x="40" y="28" font-size="15" font-weight="800" fill="#1c2f28">路径关键窗口 × 投递节点海图（冲突高峰：${cy} 年 9–10 月）</text>
-    <text x="40" y="48" font-size="11.5" fill="#63705f">${gy} 届口径 · 当前 ${fmtDate(TODAY)} · ${gradeLabel()}${state.primaryPath ? ' · 主路径：' + PATHS[state.primaryPath].name : ''}</text>
+    <text x="40" y="28" font-size="15" font-weight="800" fill="#1c2f28">四条路的关键窗口，集中交汇在 ${cy} 年 9–10 月</text>
+    <text x="40" y="48" font-size="11.5" fill="#63705f">${gy} 届毕业生 · 当前 ${fmtDate(TODAY)} · ${gradeLabel()}</text>
     <line x1="150" y1="64" x2="150" y2="356" stroke="#d9d2b8" stroke-width=".6"/>
     <line x1="640" y1="64" x2="640" y2="356" stroke="#d9d2b8" stroke-width=".6"/>
     <rect x="452" y="64" width="118" height="292" fill="#f6e4dd" opacity=".75"/>
@@ -9333,8 +9228,8 @@ function conflictSVG(){
     ${laneHTML}
     <g class="lane-rect" style="animation-delay:.55s">
       <rect x="150" y="368" width="490" height="56" rx="10" fill="#f6e4dd" stroke="#a5382a" stroke-width=".8"/>
-      <text x="166" y="390" font-size="12.5" font-weight="800" fill="#a5382a">9月28日 九推落定 → 10月24日 考研报名截止：中间切换窗口仅 4 天</text>
-      <text x="166" y="410" font-size="11.5" fill="#712b13">多选路径时必须以 P1 主路径锚定核心精力，次要路径在切换窗口前提前备齐底线材料。</text>
+      <text x="166" y="390" font-size="12.5" font-weight="800" fill="#a5382a">9月28日 九推落定 → 10月24日 考研报名截止：中间只有 4 天</text>
+      <text x="166" y="410" font-size="11.5" fill="#712b13">看清错峰互补（如保研+留学）与正面叠压区间，才能提前排开时间表。</text>
     </g>
   </svg>`;
 }
@@ -9344,118 +9239,108 @@ function renderConflict(){
   const schedules = p.schedules || [];
   const fixedWeekly = schedules.reduce((s, x) => s + (Number(x.weeklyHours) || 0), 0);
   const pathCount = state.paths.length;
-  const primaryHours = pathCount ? Math.max(4, Math.round((p.weeklyHours || 8) * 0.6)) : 0;
-  const secondaryHours = Math.max(0, pathCount - 1) * 3;
+  const pathWeeklyHours = pathCount ? (4 + Math.max(0, pathCount - 1) * 3) : 0;
   const activeJobGapTasks = (state.actionPlan || []).filter(x => x.source === 'job_gap' && !x.done);
   const activeJobApplyTasks = (state.actionPlan || []).filter(x => x.source === 'job_apply' && !x.done);
   const jobWeeklyHours = activeJobGapTasks.reduce((s, x) => s + Math.max(2, Math.round((Number(x.hours) || 6) / 2)), 0);
-  const plannedExtraWeekly = primaryHours + secondaryHours + jobWeeklyHours;
+  const plannedExtraWeekly = pathWeeklyHours + jobWeeklyHours;
   const budgetWeekly = Math.max(1, Number(p.weeklyHours) || 8);
   const loadRatio = Math.min(100, Math.round((plannedExtraWeekly / budgetWeekly) * 100));
   const overloaded = plannedExtraWeekly > budgetWeekly;
 
-  // Honest missing-info check (never fabricate pseudo-precision!)
   const missingNotes = [];
   if(!p.graduationDate) missingNotes.push({label:'预计毕业年月未精确到月（当前按 ' + gradeLabel() + ' 推算为 ' + tlGradYear() + ' 届）', page:0, mod:'profile'});
-  if(!schedules.length) missingNotes.push({label:'05a 固定日程（课表 / 考试周 / 实习排班）尚未录入，暂无法精确检测具体周次撞期', page:3, mod:'profile'});
-  if(p.intern === '未确定' && state.paths.includes('jiuye')) missingNotes.push({label:'05b 可实习时间窗口为「未确定」，暂无法校核日常/暑期实习出勤冲突', page:3, mod:'profile'});
-  if(!pathCount) missingNotes.push({label:'07 发展路径与主路径尚未选择，多路径切换窗口暂按默认样例展示', mod:'paths'});
-  if(state.paths.includes('jiuye') && !activeJobApplyTasks.length && !(state.jobs.savedIds?.length || state.jobs.targetReqIds?.length)){
-    missingNotes.push({label:'09 就业岗位库尚未收藏目标岗位，企业级网申截止窗口与技能工时暂未叠加入图', mod:'jobs'});
-  }
+  if(!schedules.length) missingNotes.push({label:'固定日程（课表 / 考试周 / 实习排班）尚未录入，暂未叠加具体周次占用', page:3, mod:'profile'});
+  if(p.intern === '未确定' && state.paths.includes('jiuye')) missingNotes.push({label:'可实习时间窗口尚未确定，暂未校核日常/暑期实习出勤期', page:3, mod:'profile'});
+  if(!pathCount) missingNotes.push({label:'尚未勾选具体考虑的路径，可在「选择路径」中多选查看两两关系', mod:'paths'});
 
   const c = CONFLICTS[pairKey(state.calcA,state.calcB)];
   const selPairs = [];
   for(let i=0;i<state.paths.length;i++)for(let j=i+1;j<state.paths.length;j++)selPairs.push([state.paths[i],state.paths[j]]);
   return `
-  ${flowRibbonHTML()}
   ${upstreamSyncBannerHTML()}
-  <div class="kicker">全局输出 · Step 10 · 实时时间冲突海图（五源动态合成）</div>
-  <h1 class="page-title">合并固定日程、负荷预算、路径节点与<em>岗位投递窗口。</em></h1>
-  <p class="page-sub">自动汇聚 05a 固定安排、05b 可投入时间、07/08 主次路径关键节点及 09 收藏岗位的投递与学习任务；信息不足处明确标注边界，绝不生成伪精确结论。</p>
+  <div class="kicker">时间冲突海图 · 实时合成</div>
+  <h1 class="page-title">四条路的枪，<em>不是同时响的。</em></h1>
+  <p class="page-sub">合并你的固定日程、每周可投入时间、各路径关键节点与已收藏岗位的投递窗口；信息不足处明确标注，不生成伪精确结论。</p>
 
   <div class="cc-cap-grid">
     <section class="cc-subcard" aria-label="每周负荷实时核算">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
-        <h3>📊 每周计划负荷 vs 可投入预算</h3>
-        <span class="tag ${overloaded ? 'warn' : ''}">${overloaded ? `⚠️ 超载 +${plannedExtraWeekly - budgetWeekly}h/周` : '✓ 负荷可执行'}</span>
+        <h3>📊 每周计划负荷 vs 可投入时间</h3>
+        <span class="tag ${overloaded ? 'warn' : ''}">${overloaded ? `负荷偏紧（超出 ${plannedExtraWeekly - budgetWeekly}h/周）` : '✓ 时间预算充裕'}</span>
       </div>
-      <div class="cc-load-bar"><span style="width:${loadRatio}%;background:${overloaded ? 'var(--red)' : 'var(--accent)'}"></span></div>
+      <div class="cc-load-bar"><span style="width:${loadRatio}%;background:${overloaded ? 'var(--amber)' : 'var(--accent)'}"></span></div>
       <div style="font-size:13px;line-height:1.8">
-        <b>课余可投入预算（05b）：</b>${budgetWeekly}h/周（可用时段：${(p.availableSlots||[]).join('、') || '未设'} · 实习窗口：${esc(p.intern)}）<br>
-        <b>当前计划课余负荷：</b>合计 <b>${plannedExtraWeekly}h/周</b>（主路径 ${primaryHours}h + 次要路径叠加 ${secondaryHours}h + 岗位反推任务 ${jobWeeklyHours}h）<br>
-        <b>固定日程占用（05a）：</b>${schedules.length ? `${schedules.length} 项固定安排 · 约 ${fixedWeekly}h/周` : '未录入固定课表/考试占用'}
+        <b>每周可自由投入：</b>${budgetWeekly}h/周（可用时段：${(p.availableSlots||[]).join('、') || '未设'} · 实习窗口：${esc(p.intern)}）<br>
+        <b>当前预估周负荷：</b>约 <b>${plannedExtraWeekly}h/周</b>（已关注路径准备约 ${pathWeeklyHours}h + 目标岗技能任务 ${jobWeeklyHours}h）<br>
+        <b>已记录固定占用：</b>${schedules.length ? `${schedules.length} 项固定安排 · 约 ${fixedWeekly}h/周` : '暂未录入固定课表/考试'}
       </div>
-      ${overloaded ? `<div class="boundary" style="margin-top:8px;padding:8px 12px"><b>超载调优建议：</b>当前多线任务超出每周可用时间 ${plannedExtraWeekly - budgetWeekly}h。建议回 <button type="button" class="btn small" style="padding:1px 7px;min-height:22px" data-action="nav" data-module="paths">07 收缩次要路径</button> 或在 08 延后非主线任务。</div>` : ''}
     </section>
 
-    <section class="cc-subcard" id="conflict-missing-panel" aria-label="待补信息与诚实边界">
+    <section class="cc-subcard" id="conflict-missing-panel" aria-label="待补信息与不确定性声明">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
         <h3>🔍 待补信息与不确定性声明</h3>
         <span class="tag blue">${missingNotes.length ? `${missingNotes.length} 项待补` : '输入完整'}</span>
       </div>
       ${missingNotes.length ? `<ul style="margin:8px 0 0;padding-left:18px;font-size:12.5px;line-height:1.8">
         ${missingNotes.map(m => `<li>${esc(m.label)} <button type="button" class="btn small" style="padding:1px 7px;min-height:22px;font-size:11px" data-action="flow-jump" data-module="${m.mod}" ${m.page!=null?`data-page="${m.page}"`:''}>去补充 →</button></li>`).join('')}
-      </ul>` : '<p style="font-size:13px;color:var(--accent-deep);margin-top:8px">✓ 学籍届别、固定日程、路径优先级与目标岗位任务均已接入，当前海图为完整实算口径。</p>'}
+      </ul>` : '<p style="font-size:13px;color:var(--accent-deep);margin-top:8px">✓ 学籍届别、固定日程与关注路径均已接入，当前海图为完整实算口径。</p>'}
     </section>
   </div>
 
   ${(schedules.length || activeJobApplyTasks.length || activeJobGapTasks.length) ? `<section class="card" style="margin-bottom:16px" aria-label="固定日程与岗位投递任务叠加表">
-    <div class="label">🗓️ 个人固定日程（05a）× 目标岗位投递窗口与行动任务（09）实时对照</div>
+    <div class="label">🗓️ 个人固定日程 × 目标岗位投递窗口与行动任务</div>
     <div style="display:flex;flex-direction:column;gap:7px;margin-top:8px">
       ${schedules.map(s => `<div class="list-row" style="margin:0;padding:8px 12px">
         <div class="lr-main">
           <div class="lr-title" style="font-size:13px"><span class="tag">${esc(s.category)}</span> ${esc(s.title)}</div>
           <div class="lr-sub">时段：${esc(s.startDate || '本学期')} → ${esc(s.endDate || '待定')} · ${esc(s.slots || '固定占用')}（${s.weeklyHours || 0}h/周）</div>
         </div>
-        <span class="tag warn" style="font-size:11px">硬占用不可排任务</span>
+        <span class="tag warn" style="font-size:11px">固定日程占用</span>
       </div>`).join('')}
       ${activeJobApplyTasks.map(t => `<div class="list-row" style="margin:0;padding:8px 12px;border-left:3px solid var(--blue)">
         <div class="lr-main">
           <div class="lr-title" style="font-size:13px"><span class="tag blue">岗位投递窗口</span> ${esc(t.title)}</div>
           <div class="lr-sub">${esc(t.detail)}</div>
         </div>
-        <button type="button" class="btn small" style="padding:3px 8px;min-height:26px" data-action="action-open-job" data-id="${esc(t.jobId)}">去投递准备 ↗</button>
+        <button type="button" class="btn small" style="padding:3px 8px;min-height:26px" data-action="action-open-job" data-id="${esc(t.jobId)}">查看详情 ↗</button>
       </div>`).join('')}
       ${activeJobGapTasks.map(t => `<div class="list-row" style="margin:0;padding:8px 12px;border-left:3px solid var(--accent)">
         <div class="lr-main">
-          <div class="lr-title" style="font-size:13px"><span class="tag">行动任务工时</span> ${esc(t.title)}</div>
-          <div class="lr-sub">${esc(t.detail)} · 预计需 ${t.hours}h（分摊约 ${Math.max(2, Math.round(t.hours/2))}h/周）</div>
+          <div class="lr-title" style="font-size:13px"><span class="tag">技能补齐任务</span> ${esc(t.title)}</div>
+          <div class="lr-sub">${esc(t.detail)} · 预计需 ${t.hours}h</div>
         </div>
       </div>`).join('')}
     </div>
   </section>` : ''}
 
-  <div class="lane-toggles">${PATH_ORDER.map(k=>{
-    const priIdx = state.paths.indexOf(k);
-    return `<button class="lane-toggle ${PATHS[k].tone} ${state.lanes.includes(k)?'on':''}" data-action="lane-toggle" data-path="${k}"><i></i>${PATHS[k].name}${priIdx===0?' · ★主路径':priIdx>0?` · P${priIdx+1}`:''}</button>`;
-  }).join('')}</div>
+  <div class="lane-toggles">${PATH_ORDER.map(k=>`<button class="lane-toggle ${PATHS[k].tone} ${state.lanes.includes(k)?'on':''}" data-action="lane-toggle" data-path="${k}"><i></i>${PATHS[k].name}${state.paths.includes(k)?' · 已选':''}</button>`).join('')}</div>
   <div class="chart-wrap">${conflictSVG()}</div>
-  <div class="label" style="margin:26px 0 10px">路径切换窗口计算器 · 从主路径切到备选路还剩几天？</div>
+  <div class="label" style="margin:26px 0 10px">切换窗口计算器 · 从这条路切到那条，还剩几天？</div>
   <div class="card">
     <div class="calc-grid">
-      <div class="field"><label>路径 A（如主路径）</label><select data-calc="A">${PATH_ORDER.map(k=>`<option value="${k}" ${state.calcA===k?'selected':''}>${PATHS[k].letter} · ${PATHS[k].name}</option>`).join('')}</select></div>
+      <div class="field"><label>路径 A</label><select data-calc="A">${PATH_ORDER.map(k=>`<option value="${k}" ${state.calcA===k?'selected':''}>${PATHS[k].letter} · ${PATHS[k].name}</option>`).join('')}</select></div>
       <button class="btn" data-action="calc-swap" aria-label="交换两条路径" style="min-height:44px">⇄</button>
-      <div class="field"><label>路径 B（如备选路径）</label><select data-calc="B">${PATH_ORDER.map(k=>`<option value="${k}" ${state.calcB===k?'selected':''}>${PATHS[k].letter} · ${PATHS[k].name}</option>`).join('')}</select></div>
+      <div class="field"><label>路径 B</label><select data-calc="B">${PATH_ORDER.map(k=>`<option value="${k}" ${state.calcB===k?'selected':''}>${PATHS[k].letter} · ${PATHS[k].name}</option>`).join('')}</select></div>
     </div>
     ${state.calcA===state.calcB
-      ?'<div class="empty" style="padding:24px"><h3>请选择两条不同的路径</h3><p>同一条路径不存在切换窗口——把 A 和 B 设为不同路径对比。</p></div>'
+      ?'<div class="empty" style="padding:24px"><h3>选两条不同的路</h3><p>同一条路没有切换窗口——把 A 和 B 换成不同路径。</p></div>'
       :`<div class="calc-result ${c.type}">
         <div class="cr-big num">${c.big}</div>
         <div class="cr-title">${c.title}</div>
         <div class="cr-body">${c.body}</div>
-        <div class="calc-quote">${c.quote}<div class="muted" style="font-size:11.5px;margin-top:6px;font-family:var(--sans)">—— 仅陈述客观时间窗口，最终取舍由学生本人决定</div></div>
+        <div class="calc-quote">${c.quote}<div class="muted" style="font-size:11.5px;margin-top:6px;font-family:var(--sans)">—— 系统只陈述事实，不替学生选</div></div>
       </div>`}
   </div>
   ${selPairs.length?`
-    <div class="label" style="margin:24px 0 10px">你已选路径的两两时间重叠关系</div>
+    <div class="label" style="margin:24px 0 10px">你已选路径的两两关系</div>
     <div class="pair-list stagger">${selPairs.map(([a,b])=>{
       const cc = CONFLICTS[pairKey(a,b)];
       return `<div class="pair-row">
         <div class="pr-names"><span class="pr-dot" style="background:${PATHS[a].color}"></span>${PATHS[a].name} × <span class="pr-dot" style="background:${PATHS[b].color}"></span>${PATHS[b].name}</div>
         <div><b style="color:${cc.type==='danger'?'var(--red)':cc.type==='warn'?'var(--amber)':'var(--green)'}">${cc.big}</b> · ${cc.body}</div>
       </div>`;}).join('')}</div>`
-  :`<div class="boundary" style="margin-top:20px"><b>尚未勾选两条以上路径：</b>若同时考虑多条去向，可在「07 路径选择」中多选并排定主次，此处将自动列出两两冲突关系。<button class="btn small" style="margin-left:10px" data-action="nav" data-module="paths">去 07 设定 →</button></div>`}`;
+  :`<div class="boundary" style="margin-top:20px"><b>可对比多条路径关系：</b>去「选择路径」勾选两条以上考虑中的方向，这里会自动列出它们是错峰互补还是正面重叠。<button class="btn small" style="margin-left:10px" data-action="nav" data-module="paths">去选择 →</button></div>`}`;
 }
 
 /* ================= 阶段一（04）：经历工坊（识别、包装、入库） ================= */
@@ -9588,7 +9473,7 @@ function renderWorkshopCore(embedded = false){
         <div class="empty" style="border:none;background:transparent;padding:48px 20px">
           <div class="big">🛠️</div>
           <h3>先在左侧粘贴原始经历或上传材料，生成建议草稿</h3>
-          <p>不知道某段课设、兼职或比赛算哪类、怎么写？系统会先建议类型与适用方向，生成「角色 + 动作 + 成果」草稿供你修改确认后再存入个人档案（自动同步至 05c 已有成果）。</p>
+          <p>不知道某段课设、兼职或比赛算哪类、怎么写？系统会先建议类型与适用方向，生成「角色 + 动作 + 成果」草稿供你修改确认后再存入个人档案。</p>
         </div>
       `}
     </div>
@@ -9596,10 +9481,9 @@ function renderWorkshopCore(embedded = false){
 }
 function renderEvidence(){
   return `
-  ${flowRibbonHTML()}
-  <div class="kicker">阶段一 · Step 04 · 经历工坊（识别、包装、入库）</div>
+  <div class="kicker">经历工坊 · 识别、包装、确认入库</div>
   <h1 class="page-title">解决「不知道算哪类、不知道怎么写」，<em>确认后才写入档案。</em></h1>
-  <p class="page-sub">按「粘贴/上传材料 → 建议类型与方向 → 生成角色+动作+成果草稿 → 编辑区补证据确认」四步推进；保存后自动同步至 05c 已有成果与 06 能力档案。</p>
+  <p class="page-sub">按「粘贴或上传材料 → 建议类型与方向 → 生成角色+动作+成果草稿 → 编辑区补证据确认」推进；保存后自动同步至个人档案。</p>
   ${renderWorkshopCore(false)}`;
 }
 function evResultHTML(r, hasLinkedTarget = false, embedded = false){
@@ -9640,8 +9524,8 @@ function evResultHTML(r, hasLinkedTarget = false, embedded = false){
       我已核对修改上述草稿，确认本人角色与内容真实（勾选后作为「已核验成果」计入技能实证）
     </label>
     <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-      <button class="btn primary" data-action="ev-save">${state.evTarget?'确认修改并更新此成果 ✓':'✓ 确认并写入个人档案（同步至 05c）'}</button>
-      ${embedded ? `<button class="btn" data-action="profile-goto" data-page="3">前往 05 时间与成果补充 →</button>` : `<button class="btn" data-action="flow-jump" data-module="profile" data-page="3">查看已同步的 05c 成果 →</button>`}
+      <button class="btn primary" data-action="ev-save">${state.evTarget?'确认修改并更新此成果 ✓':'✓ 确认并写入个人档案'}</button>
+      ${embedded ? `<button class="btn" data-action="profile-goto" data-page="3">下一步：时间与成果 →</button>` : `<button class="btn" data-action="flow-jump" data-module="profile" data-page="3">查看已同步成果 →</button>`}
     </div>
   </div>
   <div class="ev-hidden" style="margin-top:10px"><b>求职/升学内幕提示：</b>${esc(r.hidden)}</div>`;
@@ -9828,7 +9712,7 @@ function commitCourseReview(){
     }
   }
   state.courseReview=null; state.upSel=[]; state.recSel=[];
-  markUpstreamChanged('03 专业课程记录');
+  markUpstreamChanged('专业课程记录');
   render();
   if(!save()){ toast('本次修改仅在当前页面生效，浏览器未能保存。','warn'); return; }
   toast(`已新增 ${added} 门，更新 ${updated} 门，跳过 ${batch.rows.length-added-updated} 门。`);
@@ -9941,9 +9825,8 @@ document.addEventListener('click',e=>{
     selectEvidenceTarget(null);
     state.profile = normalizeProfile(JSON.parse(JSON.stringify(DEMO_PROFILE)));
     for(const c of state.profile.courses) Object.assign(c,{school:state.profile.school,major:state.profile.major,version:'',source:'演示档案'});
-    if(!state.paths.length){ state.paths = ['jiuye','kaoyan']; state.primaryPath = 'jiuye'; }
     markUpstreamChanged('载入演示档案');
-    toast('演示档案已载入：临江大学 · 汉语言文学（含固定日程与核验成果）');
+    toast('演示档案已载入：临江大学 · 汉语言文学，现在可以自由选择想了解的路径');
     render();
   }
   else if(a==='profile-goto'){
@@ -10002,7 +9885,7 @@ document.addEventListener('click',e=>{
     state.module = 'preview';
     render();
     window.scrollTo({top:0});
-    toast('已将未填非关键项标为「稍后补充」，进入 06 档案预览');
+    toast('已将未填项标为「稍后补充」，进入档案预览');
   }
   else if(a==='goto-preview'){
     const gate = checkProfileCompleteness(state.profile);
@@ -10024,7 +9907,7 @@ document.addEventListener('click',e=>{
     if($('#step3-major')) state.profile.major = $('#step3-major').value.trim();
     if(!state.profile.major){ toast('请输入你的专业名称','warn'); return; }
     state.profile.majorConfirmed = true;
-    markUpstreamChanged('03 确认修读专业');
+    markUpstreamChanged('确认修读专业');
     render();
     toast('已确认专业：' + state.profile.major);
   }
@@ -10039,14 +9922,14 @@ document.addEventListener('click',e=>{
     state.profile.schedules = Array.isArray(state.profile.schedules) ? state.profile.schedules : [];
     state.profile.schedules.push({id:'sch_' + Date.now().toString(36), category:cat, title, startDate, endDate, slots, weeklyHours});
     state.profile.deferredFields = (state.profile.deferredFields || []).filter(k => k !== 'schedules');
-    markUpstreamChanged('05a 新增固定日程');
+    markUpstreamChanged('固定日程');
     render();
     toast('已记录固定安排：' + title);
   }
   else if(a==='sch-del'){
     const idx = Number(el.dataset.i);
     if(Number.isInteger(idx) && idx >= 0) state.profile.schedules.splice(idx, 1);
-    markUpstreamChanged('05a 更新固定日程');
+    markUpstreamChanged('固定日程');
     render();
   }
   else if(a==='slot-toggle'){
@@ -10055,7 +9938,7 @@ document.addEventListener('click',e=>{
     const arr = state.profile.availableSlots = Array.isArray(state.profile.availableSlots) ? state.profile.availableSlots : [];
     const idx = arr.indexOf(slot);
     if(idx >= 0) arr.splice(idx, 1); else arr.push(slot);
-    markUpstreamChanged('05b 更新可用时段');
+    markUpstreamChanged('可用时段');
     render();
   }
   else if(a==='profile-import-click'){
@@ -10074,9 +9957,9 @@ document.addEventListener('click',e=>{
     window.scrollTo({top:0});
     const verText = versionLabel(state.confirmed, confirmedVersions().length - 1);
     if(ccVault.isAuthenticated()){
-      void ccVault.flush().then(()=>toast('已正式确认并加密归档：'+verText)).catch(err=>toast(err.message,'warn'));
+      void ccVault.flush().then(()=>toast('已确认并加密归档：'+verText)).catch(err=>toast(err.message,'warn'));
     }else{
-      toast('能力档案已正式确认归档（'+verText+'），请设定路径与优先级');
+      toast('能力档案已确认归档（'+verText+'），现在自由选择你想了解的路径');
     }
   }
   else if(a==='course-add'||a==='course-suggest'){
@@ -10140,7 +10023,7 @@ document.addEventListener('click',e=>{
     const desc = $('#ach-desc')?$('#ach-desc').value.trim():'';
     createAchievement($('#ach-type').value, title, desc);
     state.profile.deferredFields = (state.profile.deferredFields || []).filter(k => k !== 'achievements');
-    markUpstreamChanged('05c 补录已有成果');
+    markUpstreamChanged('补录已有成果');
     render();
     toast(save()?'已补录成果：'+title:'浏览器未能保存，刷新后这条成果可能丢失。', save()?'ok':'warn');
   }
@@ -10160,7 +10043,7 @@ document.addEventListener('click',e=>{
       const ev=state.profile.evidences.find(e=>entry.id?e.id===entry.id:e.title===entry.title);
       if(ev){ ev.verificationStatus=entry.verificationStatus; ev.verified=entry.verified; }
     }
-    markUpstreamChanged('05c 核验成果真实性');
+    markUpstreamChanged('核验成果真实性');
     render();
     toast(entry.verified?'已确认属实，对应技能已升级为「已实证」✓':'已设为待核验');
   }
@@ -10175,55 +10058,42 @@ document.addEventListener('click',e=>{
       [removed] = state.profile.achievements.splice(+el.dataset.i,1);
     }
     if(removed&&state.profile.evidences) state.profile.evidences=state.profile.evidences.filter(e=>removed.id?e.id!==removed.id:e.title!==removed.title);
-    markUpstreamChanged('05c 移除成果');
+    markUpstreamChanged('移除成果');
     render();
   }
   else if(a==='path-toggle'){
     const k = el.dataset.path, i = state.paths.indexOf(k);
     if(i>=0) state.paths.splice(i,1); else state.paths.push(k);
+    state.paths.sort((x,y)=>PATH_ORDER.indexOf(x)-PATH_ORDER.indexOf(y));
     state.primaryPath = state.paths[0] || null;
     state.radarRead = false;
-    markUpstreamChanged('07 路径选择');
     render();
   }
-  else if(a==='path-primary'){
+  else if(a==='diag-add-path'){
     const k = el.dataset.path;
-    if(k && state.paths.includes(k)){
-      state.paths = [k, ...state.paths.filter(x => x !== k)];
-      state.primaryPath = k;
-      state.diagIndex = 0;
-      markUpstreamChanged('07 切换主路径为 ' + PATHS[k].name);
-      render();
-      toast('已将「' + PATHS[k].name + '」设为 ★ 主路径（P1）');
-    }
-  }
-  else if(a==='path-move'){
-    const k = el.dataset.path, dir = Number(el.dataset.dir) || 0;
-    const idx = state.paths.indexOf(k), nxt = idx + dir;
-    if(idx >= 0 && nxt >= 0 && nxt < state.paths.length){
-      const copy = state.paths.slice();
-      [copy[idx], copy[nxt]] = [copy[nxt], copy[idx]];
-      state.paths = copy;
-      state.primaryPath = state.paths[0] || null;
-      markUpstreamChanged('07 调整路径优先级顺序');
+    if(k && PATH_ORDER.includes(k)){
+      if(!state.paths.includes(k)){
+        state.paths.push(k);
+        state.paths.sort((x,y)=>PATH_ORDER.indexOf(x)-PATH_ORDER.indexOf(y));
+      }
+      state.diagIndex = state.paths.indexOf(k);
+      state.radarRead = false;
       render();
     }
   }
   else if(a==='path-all'){
-    const rest = PATH_ORDER.filter(k => !state.paths.includes(k));
-    state.paths = [...state.paths, ...rest];
+    state.paths = PATH_ORDER.slice();
     state.primaryPath = state.paths[0] || null;
+    state.diagIndex = 0;
     state.radarRead=false;
-    markUpstreamChanged('07 全选路径');
     render();
   }
-  else if(a==='path-none'){ state.paths = []; state.primaryPath = null; markUpstreamChanged('07 清空路径'); render(); }
+  else if(a==='path-none'){ state.paths = []; state.primaryPath = null; render(); }
   else if(a==='go-diag'){
     if(!state.profile.saved){
       state.profile = normalizeProfile(JSON.parse(JSON.stringify(DEMO_PROFILE)));
       toast('已自动载入演示档案生成专属诊断');
     }
-    if(!state.primaryPath && state.paths.length) state.primaryPath = state.paths[0];
     state.diagIndex = 0; state.module='diag'; render(); window.scrollTo({top:0});
   }
   else if(a==='action-plan-toggle'){
@@ -10335,9 +10205,9 @@ document.addEventListener('click',e=>{
       metrics:[],
     });
     state.profile.deferredFields = (state.profile.deferredFields || []).filter(k => k !== 'achievements');
-    markUpstreamChanged('04 经历工坊确认入库：' + title);
+    markUpstreamChanged('经历工坊确认入库：' + title);
     render();
-    toast(save() ? `已确认写入档案 ${item.id}（已同步至 05c 已有成果）✓` : '浏览器未能保存，刷新后本次修改可能丢失。', save()?'ok':'warn');
+    toast(save() ? `已确认写入个人档案 ${item.id} ✓` : '浏览器未能保存，刷新后本次修改可能丢失。', save()?'ok':'warn');
   }
   else if(a==='intel-cat'){ state.intel.cat = el.dataset.cat; render(); }
   else if(a==='intel-savedonly'){ state.intel.savedOnly = !state.intel.savedOnly; render(); }
@@ -10706,7 +10576,7 @@ document.addEventListener('input',e=>{
     }
     if(e.target.id==='ev-role') item.role = e.target.value.trim();
     else item.materials = e.target.value.split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
-    markUpstreamChanged('04 补充成果角色与材料');
+    markUpstreamChanged('补充成果角色与材料');
     const stEl = $('#ev-local-status');
     if(stEl) stEl.textContent = save() ? '已保存在当前浏览器。' : '浏览器未能保存，刷新后本次修改可能丢失。';
     return;
@@ -10783,7 +10653,7 @@ document.addEventListener('change',e=>{
     const c = state.profile.courses[idx];
     if(c){
       c.status = e.target.value;
-      markUpstreamChanged('03 更新课程修读状态');
+      markUpstreamChanged('更新课程修读状态');
       render();
     }
     return;
@@ -10996,7 +10866,6 @@ document.addEventListener('submit',e=>{
       metrics:[],
     }];
     state.profile.saved=true;
-    if(!state.paths.includes('jiuye')) state.paths.push('jiuye');
     j.personaId=null;
     j.personalized=true;
     ccCourseworkDraft={open:false,title:'',desc:'',role:'',url:''};
@@ -11054,14 +10923,12 @@ document.addEventListener('submit',e=>{
     state.profile.majorConfirmed = Boolean(state.profile.major);
     j.personaId=null;
     j.personalized=true;
-    if(!state.paths.includes('jiuye')) state.paths.push('jiuye');
-    if(!state.primaryPath) state.primaryPath = state.paths[0];
     const fromJobs = state.module === 'jobs';
     if(fromJobs){
       state.profile.saved = true;
       recordProfileSnapshot();
     }
-    markUpstreamChanged('导入整份简历提取草稿');
+    markUpstreamChanged('导入简历提取草稿');
     ccFullResumeParsed=null;
     ccActiveModal=null;
     ccClearProfileCopilotCache();
@@ -11075,7 +10942,7 @@ document.addEventListener('submit',e=>{
       state.module='preview';
       render();
       window.scrollTo({top:0});
-      toast(`已提取 ${added} 段${confirmAll?'已核验':'待核验'}经历草稿，请在 06 能力档案预览中核对确认归档 ✓`);
+      toast(`已提取 ${added} 段${confirmAll?'已核验':'待核验'}经历草稿，请在档案预览中核对确认归档 ✓`);
     }
     return;
   }

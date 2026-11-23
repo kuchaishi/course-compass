@@ -916,18 +916,25 @@ try {
     await vaultPage.locator('[data-action="preview-mode"][data-mode="capability"]').click();
     await vaultPage.locator('[data-action="profile-save"]').click();
 
-    // Step 07: Path selection with mandatory Primary Path & Priority Order -> Step 08 Diagnosis -> Step 09 Job Save Write-Back -> Step 10 Conflict Chart
+    // Open user path exploration -> Consistent direction index in Diagnosis & Employment -> Job Save Write-Back -> Conflict Chart
+    assert.deepEqual(await vaultPage.evaluate(() => state.paths), [], 'Paths must remain empty until user freely chooses');
     await vaultPage.locator('[data-action="path-toggle"][data-path="kaoyan"]').click();
     await vaultPage.locator('[data-action="path-toggle"][data-path="jiuye"]').click();
-    await vaultPage.locator('[data-action="path-primary"][data-path="jiuye"]').click();
-    assert.equal(await vaultPage.evaluate(() => state.primaryPath), 'jiuye');
     await vaultPage.locator('[data-action="go-diag"]').click();
-    assert.ok(await vaultPage.locator('.diag-head').getByText('★ 主路径 · 就业', { exact: false }).first().isVisible());
+    await vaultPage.locator('[data-action="diag-tab"][data-path="jiuye"]').click();
+    const diagDirIndex = (await vaultPage.locator('#diag-jiuye-summary .tag.blue').first().textContent()).trim();
+    await vaultPage.locator('[data-action="diag-add-path"][data-path="baoyan"]').click();
+    assert.ok(await vaultPage.locator('[data-action="diag-tab"][data-path="baoyan"]').isVisible());
     await vaultPage.locator('.nav-item[data-module="jobs"]').click();
+    assert.equal(await vaultPage.locator('.cc-quick-tools').count(), 0, 'Duplicate quick tools bar must be removed');
+    assert.equal(await vaultPage.getByText('求职就绪度概览', { exact: false }).count(), 0, 'Fake KPI strip must be removed');
+    assert.equal(await vaultPage.getByLabel('31.8万校招仓定向直通车').count(), 0, 'Duplicate warehouse strip must be removed from home');
+    const jobsDirIndex = (await vaultPage.locator('.cc-direction-card .tag.blue').first().textContent()).trim();
+    assert.equal(diagDirIndex, jobsDirIndex, 'Diagnosis direction index must match Employment direction card index');
     await vaultPage.locator('.cc-employment-nav [data-mode="list"]').click();
     await vaultPage.locator('.cc-job-card [data-action="cc-save-job"]').first().click();
     await vaultPage.locator('.nav-item[data-module="diag"]').click();
-    assert.ok(await vaultPage.locator('#global-action-plan').getByText('09 投递节点回写', { exact: false }).first().isVisible());
+    assert.ok(await vaultPage.locator('#global-action-plan').getByText('投递跟进', { exact: false }).first().isVisible());
     await vaultPage.locator('.nav-item[data-module="conflict"]').click();
     assert.ok(await vaultPage.getByText('秋季期末集中考试周', { exact: false }).first().isVisible());
     assert.ok(await vaultPage.getByText('待补信息与不确定性声明', { exact: false }).first().isVisible());
@@ -959,18 +966,23 @@ try {
     await vaultPage.locator('#account-label').filter({ hasText: 'e2e_alice' }).waitFor();
     await vaultPage.getByText('查看历史档案（0）', { exact: false }).waitFor();
 
-    // Verify cold-start coursework onboarding in Employment and clean direction-first home (no 31.8w strip on home)
+    // Verify zero-project student enters courses/coursework ONCE in Profile and Employment inherits cleanly without duplicate forms
+    await vaultPage.locator('[data-action="profile-goto"][data-page="0"]').first().click();
+    await vaultPage.locator('#basic-school').fill('临江学院');
+    await vaultPage.locator('#basic-major').fill('计算机科学与技术');
+    await vaultPage.locator('#basic-grade').selectOption('大三');
+    await vaultPage.locator('[data-action="profile-next"]').click();
+    await vaultPage.locator('[data-action="course-mode"][data-mode="manual"]').click();
+    await vaultPage.locator('#course-input').fill('数据库原理课程设计');
+    await vaultPage.locator('[data-action="course-add"]').click();
+    await vaultPage.locator('[data-action="course-review-save"]').click();
+    await vaultPage.locator('[data-action="profile-goto"][data-page="3"]').first().click();
+    await vaultPage.locator('[data-action="gate-defer-all"], [data-action="goto-preview"]').first().click();
+    await vaultPage.locator('[data-action="profile-save"]').click();
     await vaultPage.locator('.nav-item[data-module="jobs"]').click();
-    await vaultPage.locator('[data-action="cc-coursework-start"]').click();
-    assert.equal(await vaultPage.getByRole('region', { name: '31.8万校招仓定向直通车' }).count(), 0);
+    assert.ok(await vaultPage.locator('.cc-profile-bar').getByText('已继承课设/实验 1 项', { exact: false }).first().isVisible());
     assert.ok(await vaultPage.getByRole('heading', { name: '方向与岗位族', exact: true }).isVisible());
-    await vaultPage.locator('#cc-coursework-form input[name="cwMajor"]').fill('计算机科学与技术');
-    await vaultPage.locator('#cc-coursework-form input[name="cwTitle"]').fill('《数据库原理》选课系统课程设计');
-    await vaultPage.locator('#cc-coursework-form textarea[name="cwDesc"]').fill('独立完成 Java Spring Boot 与 MySQL 表结构设计及慢查询索引优化实验');
-    await vaultPage.locator('#cc-coursework-form input[name="cwRole"]').fill('独立负责后端与数据库');
-    await vaultPage.locator('#cc-coursework-form [type="submit"]').click();
-    assert.ok(await vaultPage.getByText('课设/实验 1 项（冷启动核心依据）', { exact: false }).isVisible());
-    assert.ok(await vaultPage.getByRole('heading', { name: '软件开发', exact: true }).isVisible());
+    assert.ok(await vaultPage.getByRole('heading', { name: '软件开发', exact: true }).first().isVisible());
   } finally {
     await vaultContext.close();
   }
