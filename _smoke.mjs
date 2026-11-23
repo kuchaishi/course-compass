@@ -431,6 +431,43 @@ assert.equal(offlineStatus.available, false);
   assert.equal(mergedEv.hasPortfolio, true);
   assert.ok(mergedEv.skillIds.includes('spring_boot') && mergedEv.skillIds.includes('redis'));
 
+  // Cold-start student without resume/projects: curriculum design courses auto-bridge into employment evidences
+  const coldStudent = CC.ccProfileFromState({
+    profile: {
+      major: '机械电子工程',
+      grade: '大二',
+      graduationDate: '2029-06',
+      degree: 'bachelor',
+      courses: [
+        { name: 'STM32 嵌入式系统课程设计', status: '已修' },
+        { name: 'C/C++ 程序设计', status: '已修' },
+      ],
+      achievements: [],
+    },
+  });
+  assert.equal(CC.hasHardcoreExperience(coldStudent), false);
+  assert.ok(coldStudent.evidences.some(e => e.type === '课设' && e.skillIds.includes('mcu')));
+  const courseOnlyStudent = CC.ccProfileFromState({
+    profile: {
+      major: '机械电子工程',
+      grade: '大二',
+      graduationDate: '2029-06',
+      degree: 'bachelor',
+      courses: [{ name: 'C/C++ 程序设计', status: '已修' }],
+      achievements: [],
+    },
+  });
+  const internSample = CC.makeImportedJob({
+    org: '测试机器人公司',
+    jobType: 'intern',
+    jdText: '岗位：嵌入式实习生\n要求：本科在读，熟悉 STM32 与 C语言。',
+  }, coldStudent);
+  const coldMatch = CC.forwardMatch(coldStudent, [internSample]).all[0];
+  const courseOnlyMatch = CC.forwardMatch(courseOnlyStudent, [internSample]).all[0];
+  assert.ok(coldMatch.matchScore > courseOnlyMatch.matchScore + 8, `Expected course design to boost cold-start matchScore (${coldMatch.matchScore} vs ${courseOnlyMatch.matchScore})`);
+  const coldFm = CC.fieldMatchOf(coldStudent, internSample, coldMatch);
+  assert.equal(coldFm.fields.find(f => f.key === 'evidence').status, 'matched');
+
   const idServer = createCourseCompassServer({ identityDbPath: ':memory:' });
   idServer.listen(0, '127.0.0.1');
   await once(idServer, 'listening');

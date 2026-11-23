@@ -695,7 +695,7 @@
     }).sort((a, b) => b.score - a.score).slice(0, 3);
     return {
       needed: true,
-      reason: '当前档案暂无实习、自研项目、竞赛或科研经历：可先将以下课设做最小工程改造作为「冷启动敲门砖」（系统赋予低权重兜底），同时主线务必跟进上方 B 站体系课与自研项目！',
+      reason: '当前暂无实习或独立项目经历：你的课程设计（课设）与专业实验已作为冷启动核心依据接入就业匹配；先挑 1 门对口课设补充个人分工、实测数据或报告/代码链接即可投递入门实习，同时主线跟进上方 B 站体系课与自研项目！',
       items,
     };
   }
@@ -1600,6 +1600,33 @@
       draftEv.type = canonicalEvidenceType(draftEv);
       evidences.push(draftEv);
     }
+    if (!hasHardcoreExperience({ evidences })) {
+      const designCourseRe = /课程设计|课设|综合.*实践|创新实践|实训|综合实验|近代物理实验|建模竞赛训练|学年论文|毕业设计|毕业论文/;
+      for (const [idx, course] of courseRecords.entries()) {
+        if (!course?.name || !designCourseRe.test(course.name)) continue;
+        if (!isCompletedStatus(course.status) && !['在修', 'in_progress'].includes(course.status)) continue;
+        if (evidences.some(e => e.title === course.name || (course.id && e.courseId === course.id))) continue;
+        const taught = course.id ? (COURSE_BY_ID.get(course.id)?.teaches || []) : [];
+        const extracted = extractSkillsFromText(course.name + ' ' + (course.major || p.major || '')).map(s => s.skillId);
+        const skillIds = [...new Set([...taught, ...extracted])];
+        if (!skillIds.length) continue;
+        const done = isCompletedStatus(course.status);
+        evidences.push({
+          id: 'ev_cdesign_' + (djb2(course.name + '|' + idx) >>> 0).toString(36),
+          title: course.name,
+          description: '专业实践与课程设计环节（来自已修课程档案）',
+          type: '课设',
+          courseId: course.id || null,
+          skillIds,
+          verificationStatus: done ? 'user_confirmed' : 'unverified',
+          observedAt: null,
+          artifactUrl: null,
+          hasPortfolio: false,
+          verified: done,
+          metrics: [],
+        });
+      }
+    }
     const graduationDate = /^20\d\d-(?:0[1-9]|1[0-2])$/.test(p.graduationDate || '') ? p.graduationDate : null;
     const graduationYear = graduationDate ? Number(graduationDate.slice(0, 4)) : null;
     return { schemaVersion: EMPLOYMENT_SCHEMA_VERSION, major, majorRaw: p.major || '', degree: DEGREE_RANK[p.degree] ? p.degree : null,
@@ -1829,11 +1856,14 @@
     for (const skill of p.inProgressCourseSkillIds || []) put(exposure, skill, 0.15);
     for (const id of p.completedCourseIds) for (const skill of COURSE_BY_ID.get(id)?.teaches || []) put(exposure, skill, 0.25);
     for (const skill of p.completedCourseSkillIds || []) put(exposure, skill, 0.25);
+    const coldStart = !hasHardcoreExperience(p);
     for (const evidence of p.evidences) {
       const verification = VERIFICATION_FACTOR[verificationOf(evidence)];
       if (!verification) continue;
       const kind = evidenceKindOf(evidence);
-      const typeWeight = EVIDENCE_TYPE_WEIGHT[kind] ?? EVIDENCE_TYPE_WEIGHT.other;
+      const typeWeight = kind === 'coursework' && coldStart
+        ? 0.68
+        : (EVIDENCE_TYPE_WEIGHT[kind] ?? EVIDENCE_TYPE_WEIGHT.other);
       const age = dateValue(evidence.observedAt);
       const freshness = Number.isFinite(age) ? Math.max(0.65, 1 - Math.max(0, now.getTime() - age) / (1460 * dayMs)) : 0.95;
       const strength = verification * clamp(evidence.quality ?? 0.92, 0, 1) * freshness * typeWeight;
@@ -1843,13 +1873,15 @@
           put(project, id, strength);
           put(internship, id, strength);
         } else if (kind === 'coursework') {
-          put(exposure, id, Math.min(0.42, strength));
-          put(project, id, strength * 0.85);
+          put(exposure, id, Math.min(coldStart ? 0.72 : 0.42, strength));
+          put(project, id, strength * (coldStart ? 0.92 : 0.85));
         } else {
           put(exposure, id, strength);
           put(project, id, strength);
         }
-        if (evidence.hasPortfolio || evidence.artifactUrl) put(portfolio, id, kind === 'coursework' ? strength * 0.6 : strength);
+        if (evidence.hasPortfolio || evidence.artifactUrl) {
+          put(portfolio, id, kind === 'coursework' ? strength * (coldStart ? 0.85 : 0.6) : strength);
+        }
         evidenceRefs.set(id, [...(evidenceRefs.get(id) || []), evidence.id]);
       }
     }
@@ -2561,17 +2593,23 @@
     const hardcoreLinked = linkedEv.filter(ev => evidenceKindOf(ev) !== 'coursework');
     const confirmedHardcore = hardcoreLinked.filter(hasVerifiedEvidence);
     const courseworkLinked = linkedEv.filter(ev => evidenceKindOf(ev) === 'coursework');
-    const evStatus = confirmedHardcore.length > 0 ? 'matched' : (hardcoreLinked.length > 0 || courseworkLinked.length > 0) ? 'partial' : 'mismatch';
+    const confirmedCoursework = courseworkLinked.filter(hasVerifiedEvidence);
+    const isColdStartProfile = !hasHardcoreExperience(p);
+    const evStatus = confirmedHardcore.length > 0 || (isColdStartProfile && type === 'intern' && confirmedCoursework.length > 0)
+      ? 'matched'
+      : (hardcoreLinked.length > 0 || courseworkLinked.length > 0) ? 'partial' : 'mismatch';
     const evidenceField = {
       key: 'evidence', label: '成果与作品', status: evStatus,
-      jobValue: req.bonusEvidenceTypes?.length ? req.bonusEvidenceTypes.slice(0, 2).join(' / ') : '自研项目 / 学科竞赛 / 实习交付物',
+      jobValue: req.bonusEvidenceTypes?.length ? req.bonusEvidenceTypes.slice(0, 2).join(' / ') : (type === 'intern' ? '课程设计 / 自研项目 / 竞赛或实习交付' : '自研项目 / 学科竞赛 / 实习交付物'),
       profileValue: hardcoreLinked.length
         ? `关联 ${hardcoreLinked.length} 段实战经历（已核验 ${confirmedHardcore.length} 段）`
         : courseworkLinked.length
-          ? (hasHardcoreExperience(p)
+          ? (!isColdStartProfile
             ? `仅关联 ${courseworkLinked.length} 段课设/作业（权重较低，建议补实战项目）`
-            : `仅关联 ${courseworkLinked.length} 段课设包装（冷启动过渡用）`)
-          : '暂无直接关联实战成果（建议通过 B站体系课+自研项目补齐）',
+            : `已接入 ${courseworkLinked.length} 项课程设计/课设支撑（零项目阶段核心依据${courseworkLinked.some(e => e.hasPortfolio || e.artifactUrl) ? ' · 含作品材料' : ''}）`)
+          : isColdStartProfile && learnedCore.length
+            ? `已有 ${learnedCore.length} 项相关课程基础，可将对应课程设计/实验接入档案提升匹配`
+            : '暂无直接关联实战成果（建议先接入课程设计，或通过 B站体系课+自研项目补齐）',
     };
 
     // 7. 实习排期与时间预算（含多线发展时间冲突检测）

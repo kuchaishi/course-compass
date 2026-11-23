@@ -922,6 +922,19 @@ try {
     await vaultPage.locator('[data-action="profile-delete"]').click();
     await vaultPage.locator('#account-label').filter({ hasText: 'e2e_alice' }).waitFor();
     await vaultPage.getByText('查看历史档案（0）', { exact: false }).waitFor();
+
+    // Verify cold-start coursework onboarding in Employment and clean direction-first home (no 31.8w strip on home)
+    await vaultPage.locator('.nav-item[data-module="jobs"]').click();
+    await vaultPage.locator('[data-action="cc-coursework-start"]').click();
+    assert.equal(await vaultPage.getByRole('region', { name: '31.8万校招仓定向直通车' }).count(), 0);
+    assert.ok(await vaultPage.getByRole('heading', { name: '方向与岗位族', exact: true }).isVisible());
+    await vaultPage.locator('#cc-coursework-form input[name="cwMajor"]').fill('计算机科学与技术');
+    await vaultPage.locator('#cc-coursework-form input[name="cwTitle"]').fill('《数据库原理》选课系统课程设计');
+    await vaultPage.locator('#cc-coursework-form textarea[name="cwDesc"]').fill('独立完成 Java Spring Boot 与 MySQL 表结构设计及慢查询索引优化实验');
+    await vaultPage.locator('#cc-coursework-form input[name="cwRole"]').fill('独立负责后端与数据库');
+    await vaultPage.locator('#cc-coursework-form [type="submit"]').click();
+    assert.ok(await vaultPage.getByText('课设/实验 1 项（冷启动核心依据）', { exact: false }).isVisible());
+    assert.ok(await vaultPage.getByRole('heading', { name: '软件开发', exact: true }).isVisible());
   } finally {
     await vaultContext.close();
   }

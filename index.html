@@ -1549,7 +1549,7 @@ window.CC_DATA = {"skills":[{"id":"python","name":"Python","category":"编程"},
     }).sort((a, b) => b.score - a.score).slice(0, 3);
     return {
       needed: true,
-      reason: '当前档案暂无实习、自研项目、竞赛或科研经历：可先将以下课设做最小工程改造作为「冷启动敲门砖」（系统赋予低权重兜底），同时主线务必跟进上方 B 站体系课与自研项目！',
+      reason: '当前暂无实习或独立项目经历：你的课程设计（课设）与专业实验已作为冷启动核心依据接入就业匹配；先挑 1 门对口课设补充个人分工、实测数据或报告/代码链接即可投递入门实习，同时主线跟进上方 B 站体系课与自研项目！',
       items,
     };
   }
@@ -2454,6 +2454,33 @@ window.CC_DATA = {"skills":[{"id":"python","name":"Python","category":"编程"},
       draftEv.type = canonicalEvidenceType(draftEv);
       evidences.push(draftEv);
     }
+    if (!hasHardcoreExperience({ evidences })) {
+      const designCourseRe = /课程设计|课设|综合.*实践|创新实践|实训|综合实验|近代物理实验|建模竞赛训练|学年论文|毕业设计|毕业论文/;
+      for (const [idx, course] of courseRecords.entries()) {
+        if (!course?.name || !designCourseRe.test(course.name)) continue;
+        if (!isCompletedStatus(course.status) && !['在修', 'in_progress'].includes(course.status)) continue;
+        if (evidences.some(e => e.title === course.name || (course.id && e.courseId === course.id))) continue;
+        const taught = course.id ? (COURSE_BY_ID.get(course.id)?.teaches || []) : [];
+        const extracted = extractSkillsFromText(course.name + ' ' + (course.major || p.major || '')).map(s => s.skillId);
+        const skillIds = [...new Set([...taught, ...extracted])];
+        if (!skillIds.length) continue;
+        const done = isCompletedStatus(course.status);
+        evidences.push({
+          id: 'ev_cdesign_' + (djb2(course.name + '|' + idx) >>> 0).toString(36),
+          title: course.name,
+          description: '专业实践与课程设计环节（来自已修课程档案）',
+          type: '课设',
+          courseId: course.id || null,
+          skillIds,
+          verificationStatus: done ? 'user_confirmed' : 'unverified',
+          observedAt: null,
+          artifactUrl: null,
+          hasPortfolio: false,
+          verified: done,
+          metrics: [],
+        });
+      }
+    }
     const graduationDate = /^20\d\d-(?:0[1-9]|1[0-2])$/.test(p.graduationDate || '') ? p.graduationDate : null;
     const graduationYear = graduationDate ? Number(graduationDate.slice(0, 4)) : null;
     return { schemaVersion: EMPLOYMENT_SCHEMA_VERSION, major, majorRaw: p.major || '', degree: DEGREE_RANK[p.degree] ? p.degree : null,
@@ -2683,11 +2710,14 @@ window.CC_DATA = {"skills":[{"id":"python","name":"Python","category":"编程"},
     for (const skill of p.inProgressCourseSkillIds || []) put(exposure, skill, 0.15);
     for (const id of p.completedCourseIds) for (const skill of COURSE_BY_ID.get(id)?.teaches || []) put(exposure, skill, 0.25);
     for (const skill of p.completedCourseSkillIds || []) put(exposure, skill, 0.25);
+    const coldStart = !hasHardcoreExperience(p);
     for (const evidence of p.evidences) {
       const verification = VERIFICATION_FACTOR[verificationOf(evidence)];
       if (!verification) continue;
       const kind = evidenceKindOf(evidence);
-      const typeWeight = EVIDENCE_TYPE_WEIGHT[kind] ?? EVIDENCE_TYPE_WEIGHT.other;
+      const typeWeight = kind === 'coursework' && coldStart
+        ? 0.68
+        : (EVIDENCE_TYPE_WEIGHT[kind] ?? EVIDENCE_TYPE_WEIGHT.other);
       const age = dateValue(evidence.observedAt);
       const freshness = Number.isFinite(age) ? Math.max(0.65, 1 - Math.max(0, now.getTime() - age) / (1460 * dayMs)) : 0.95;
       const strength = verification * clamp(evidence.quality ?? 0.92, 0, 1) * freshness * typeWeight;
@@ -2697,13 +2727,15 @@ window.CC_DATA = {"skills":[{"id":"python","name":"Python","category":"编程"},
           put(project, id, strength);
           put(internship, id, strength);
         } else if (kind === 'coursework') {
-          put(exposure, id, Math.min(0.42, strength));
-          put(project, id, strength * 0.85);
+          put(exposure, id, Math.min(coldStart ? 0.72 : 0.42, strength));
+          put(project, id, strength * (coldStart ? 0.92 : 0.85));
         } else {
           put(exposure, id, strength);
           put(project, id, strength);
         }
-        if (evidence.hasPortfolio || evidence.artifactUrl) put(portfolio, id, kind === 'coursework' ? strength * 0.6 : strength);
+        if (evidence.hasPortfolio || evidence.artifactUrl) {
+          put(portfolio, id, kind === 'coursework' ? strength * (coldStart ? 0.85 : 0.6) : strength);
+        }
         evidenceRefs.set(id, [...(evidenceRefs.get(id) || []), evidence.id]);
       }
     }
@@ -3415,17 +3447,23 @@ window.CC_DATA = {"skills":[{"id":"python","name":"Python","category":"编程"},
     const hardcoreLinked = linkedEv.filter(ev => evidenceKindOf(ev) !== 'coursework');
     const confirmedHardcore = hardcoreLinked.filter(hasVerifiedEvidence);
     const courseworkLinked = linkedEv.filter(ev => evidenceKindOf(ev) === 'coursework');
-    const evStatus = confirmedHardcore.length > 0 ? 'matched' : (hardcoreLinked.length > 0 || courseworkLinked.length > 0) ? 'partial' : 'mismatch';
+    const confirmedCoursework = courseworkLinked.filter(hasVerifiedEvidence);
+    const isColdStartProfile = !hasHardcoreExperience(p);
+    const evStatus = confirmedHardcore.length > 0 || (isColdStartProfile && type === 'intern' && confirmedCoursework.length > 0)
+      ? 'matched'
+      : (hardcoreLinked.length > 0 || courseworkLinked.length > 0) ? 'partial' : 'mismatch';
     const evidenceField = {
       key: 'evidence', label: '成果与作品', status: evStatus,
-      jobValue: req.bonusEvidenceTypes?.length ? req.bonusEvidenceTypes.slice(0, 2).join(' / ') : '自研项目 / 学科竞赛 / 实习交付物',
+      jobValue: req.bonusEvidenceTypes?.length ? req.bonusEvidenceTypes.slice(0, 2).join(' / ') : (type === 'intern' ? '课程设计 / 自研项目 / 竞赛或实习交付' : '自研项目 / 学科竞赛 / 实习交付物'),
       profileValue: hardcoreLinked.length
         ? `关联 ${hardcoreLinked.length} 段实战经历（已核验 ${confirmedHardcore.length} 段）`
         : courseworkLinked.length
-          ? (hasHardcoreExperience(p)
+          ? (!isColdStartProfile
             ? `仅关联 ${courseworkLinked.length} 段课设/作业（权重较低，建议补实战项目）`
-            : `仅关联 ${courseworkLinked.length} 段课设包装（冷启动过渡用）`)
-          : '暂无直接关联实战成果（建议通过 B站体系课+自研项目补齐）',
+            : `已接入 ${courseworkLinked.length} 项课程设计/课设支撑（零项目阶段核心依据${courseworkLinked.some(e => e.hasPortfolio || e.artifactUrl) ? ' · 含作品材料' : ''}）`)
+          : isColdStartProfile && learnedCore.length
+            ? `已有 ${learnedCore.length} 项相关课程基础，可将对应课程设计/实验接入档案提升匹配`
+            : '暂无直接关联实战成果（建议先接入课程设计，或通过 B站体系课+自研项目补齐）',
     };
 
     // 7. 实习排期与时间预算（含多线发展时间冲突检测）
@@ -6115,15 +6153,20 @@ function ccBuildTailoredResumeData(req,cp){
 }
 function ccBuildResumeMarkdownLines(req,cp,shownEvs,coveredNames,m){
   const CC=window.CC;
+  const isCold=!CC.hasHardcoreExperience(cp);
+  const courseNames=(state.profile.courses||[]).filter(c=>['已通过','已修','completed','在修'].includes(c.status)).map(c=>c.name).slice(0,8);
   const lines=[
     `# 应聘意向：${req.org||''} · ${req.title}`,
     `- 教育背景：${cp.majorRaw||'待补充专业'} · ${cp.degree?CC.DEGREE_LABEL[cp.degree]:'本科'} · ${cp.graduationYear?cp.graduationYear+' 届':'毕业届别待确认'}${cp.gpaPercent!=null?` · 均分 ${cp.gpaPercent}`:''}`,
+    ...(courseNames.length?[`- 相关主修课程：${courseNames.join('、')}`]:[]),
     `- 岗位匹配技能：${coveredNames.length?coveredNames.join(' / '):[...new Set(m.coveredSkillIds)].slice(0,6).map(CC.skillName).join(' / ')||'待补实证技能'}`,
     '',
-    '## 核心实战与项目经历（系统已按岗位相关度 × 实习/科研/项目/竞赛优先级重排）',
+    isCold
+      ? '## 核心课程设计与实践经历（已按目标岗位 JD 技能相关度重排）'
+      : '## 核心实战与项目经历（系统已按岗位相关度 × 实习/科研/项目/竞赛优先级重排）',
   ];
   if(!shownEvs.length){
-    lines.push('- [冷启动提示] 档案暂无可引用经历，建议优先结合推荐的自研微项目或竞赛完成 1 个可运行仓库后生成简历。');
+    lines.push('- [冷启动提示] 档案暂无可引用经历，可先将专业课程设计/综合实验录入就业画像，或结合推荐的自研微项目完成 1 个可运行仓库。');
   }else{
     for(const ev of shownEvs){
       const label=CC.canonicalEvidenceType(ev);
@@ -6297,8 +6340,9 @@ function ccRenderModal(){
       <div class="muted" style="font-size:12px">专业：${esc(cp.majorRaw||'待补充')} ｜ 学历与届别：${esc(cp.degree?CC.DEGREE_LABEL[cp.degree]:'本科')} ${cp.graduationYear?cp.graduationYear+' 届':''}${cp.gpaPercent!=null?` ｜ 均分 ${cp.gpaPercent}`:''} ｜ 契合度：${data.m.matchScore!=null?data.m.matchScore+'/100':'待补实证'} ｜ 仅采信已核验/已录入成果</div>
       <h4>核心技术能力对齐</h4>
       <p>${data.coveredNames.length?data.coveredNames.map(n=>`<span class="pill">${esc(n)}</span>`).join(' '):'<span class="muted">尚缺该岗核心技能实证，请先补齐下方推荐经历。</span>'}</p>
-      <h4>实战项目、科研、竞赛与实习经历（按岗位相关度 × 含金量排序）</h4>
-      ${data.isColdStart?'<p style="font-size:12px;color:#9a6b15;background:#fdf8ec;padding:6px 10px;border-radius:6px">提示：当前档案暂无实战/竞赛/实习经历，暂时使用脱敏包装后的课设过渡（建议尽快补 1 个自研微项目替代）。</p>':''}
+      ${(state.profile.courses||[]).length?`<h4>相关主修课程</h4><p style="font-size:12.5px">${(state.profile.courses||[]).slice(0,10).map(c=>esc(c.name)).join(' · ')}</p>`:''}
+      <h4>${data.isColdStart?'核心课程设计与实践经历（按岗位 JD 技能相关度排序）':'实战项目、科研、竞赛与实习经历（按岗位相关度 × 含金量排序）'}</h4>
+      ${data.isColdStart?'<p style="font-size:12px;color:#1f6a52;background:#eef6f2;padding:6px 10px;border-radius:6px">零项目求职提示：已将你的课程设计（课设）与实验成果作为首屏求职依据；面试前建议附上代码仓库或实验报告链接，并后续补 1 个自研小项目进阶。</p>':''}
       ${data.shownEvs.length?data.shownEvs.map(ev=>{
         const cleanTitle=ccStripMd(ev.title);
         const cleanDesc=ccStripMd(ev.description||'请按 STAR 补充具体指标');
@@ -7340,13 +7384,13 @@ function jobsGateHTML(){
   const personas=ccPersonas();
   return `<div class="kicker">就业 · 岗位库</div>
   <h1 class="page-title">真实岗位库 → <em>反推你的学习路线。</em></h1>
-  <p class="page-sub">粘贴整份简历 10 秒自动建档，或手动填报个人背景，即刻用八维字段对表与 31.8 万全量校招仓筛准对口岗位。</p>
-  <div class="card"><div class="label">最快开始 · 10 秒自动建档</div>
-    <p class="muted" style="font-size:13px;margin:8px 0">直接粘贴或上传你的简历（本机浏览器脱敏解析，绝不存手机号/邮箱），系统自动提取学校、专业、届别、均分、实习/科研/项目经历与 GitHub 链接，立即匹配 31.8 万在招岗位。</p>
+  <p class="page-sub">已有简历可 10 秒自动建档；还没有简历或项目的同学，可直接用<b>已修专业课、课程设计（课设）与实验作业</b>接入求职起点，先选感兴趣的方向再对标岗位。</p>
+  <div class="card"><div class="label">选择你的起步方式</div>
+    <p class="muted" style="font-size:13px;margin:8px 0">已有简历可直接粘贴/上传（本机脱敏解析，绝不存手机号/邮箱）；暂无简历或项目时，你的课程设计与专业课就是最重要的求职匹配依据。</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-      <button class="btn primary" data-action="cc-open-resume-import">📄 一键导入整份简历（推荐）</button>
-      <button class="btn" data-action="nav" data-module="profile">手动建立档案 →</button>
-      <button class="btn" data-action="cc-quick">快速探索 →</button>
+      <button class="btn primary" data-action="cc-open-resume-import">📄 已有简历 · 10 秒导入建档</button>
+      <button class="btn" style="border-color:var(--accent);color:var(--accent-deep)" data-action="cc-coursework-start">🎓 暂无简历/项目 · 用课程与课设起步 →</button>
+      <button class="btn" data-action="nav" data-module="profile">完整四步建档 →</button>
     </div>
     <div class="label" style="margin-top:18px">或免登录载入典型学生画像，直接体验</div>
     <div class="scenario-row" style="margin-top:8px">${personas.map(x=>`<button class="sc-chip" data-action="cc-persona" data-id="${x.p.id}">${esc(x.label)}</button>`).join('')}</div>
@@ -7363,8 +7407,10 @@ function ccProfileBar(cp){
   const targetCount=state.jobs.targetReqIds.length;
   const personas=ccPersonas();
   const switcher=`<select data-cc-switch-persona aria-label="切换演示画像" style="font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid var(--line2);background:var(--paper2)"><option value="">切换演示画像…</option>${personas.map(x=>`<option value="${esc(x.p.id)}" ${state.jobs.personaId===x.p.id?'selected':''}>${esc(x.p.name)} · ${esc(x.label)}</option>`).join('')}</select>`;
-  const passedCourseCount=Math.max(cp.completedCourseIds.length,(state.profile.courses||[]).filter(c=>['已通过','completed'].includes(c.status)).length);
-  return `<div class="card cc-profile-bar"><div><b>就业画像</b> · ${esc(cp.majorRaw||'专业待补充')} · ${cp.graduationYear?cp.graduationYear+' 届':'毕业届别待确认'} · ${cp.degree?window.CC.DEGREE_LABEL[cp.degree]:'学历待确认'} · 已修 ${passedCourseCount} 门 · 成果 ${cp.evidences.length} 条${internTxt}${targetCount?` · 目标 ${targetCount} 岗`:''}${state.jobs.personaId?' · 演示画像':''}</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${switcher}<button class="btn small" data-action="nav" data-module="profile">${state.profile.saved?'修改档案':'建立档案'} →</button></div></div>`;
+  const passedCourseCount=Math.max(cp.completedCourseIds.length,(state.profile.courses||[]).filter(c=>['已通过','已修','completed'].includes(c.status)).length);
+  const cwCount=(cp.evidences||[]).filter(e=>window.CC.evidenceKindOf(e)==='coursework').length;
+  const expSummary=window.CC.hasHardcoreExperience(cp)?`成果 ${cp.evidences.length} 条`:(cwCount?`课设/实验 ${cwCount} 项（冷启动核心依据）`:`暂无项目（可接入课设）`);
+  return `<div class="card cc-profile-bar"><div><b>就业画像</b> · ${esc(cp.majorRaw||'专业待补充')} · ${cp.graduationYear?cp.graduationYear+' 届':'毕业届别待确认'} · ${cp.degree?window.CC.DEGREE_LABEL[cp.degree]:'学历待确认'} · 已修 ${passedCourseCount} 门 · ${expSummary}${internTxt}${targetCount?` · 目标 ${targetCount} 岗`:''}${state.jobs.personaId?' · 演示画像':''}</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${switcher}<button class="btn small" data-action="nav" data-module="profile">${state.profile.saved?'修改档案':'建立档案'} →</button></div></div>`;
 }
 function ccQuickToolsHTML(){
   return `<div class="cc-quick-tools">
@@ -7386,7 +7432,7 @@ function ccPreferences(cp){
       <label><input type="checkbox" name="personalized" ${cp.personalized?'checked':''}> 使用档案做个性化推荐</label><button class="btn small primary" type="submit">保存偏好</button>
     </form>
     <details data-cc-tool-panel="resume" ${ccResumeDrafts.length?'open':''}><summary>从简历添加经历</summary><form id="cc-resume-form" class="cc-mini-form">
-      <label>默认经历类型（粘贴整份简历时将自动识别科研/实习/项目/竞赛）<select name="kind"><option>项目</option><option>实习实践</option><option>科研</option><option>竞赛</option></select></label>
+      <label>默认经历类型（粘贴整份简历时将自动识别科研/实习/项目/竞赛/课设）<select name="kind"><option>项目</option><option value="课程作业">课程设计 / 课设实验</option><option>实习实践</option><option>科研</option><option>竞赛</option></select></label>
       <label>粘贴对应经历段落<textarea name="resume" required maxlength="12000" placeholder="第一行写经历名称，接着粘贴职责和产出，可用空行隔开多段；或点击上方「一键导入整份简历」自动完成全量建档"></textarea></label>
       <button class="btn small" type="submit">预览可导入经历</button></form>
       ${ccResumeDrafts.length?`<form id="cc-resume-confirm" class="cc-mini-form">${ccResumeDrafts.map((entry,index)=>`<label><input type="checkbox" name="resumeEntry" value="${index}" checked> ${esc(entry.title)} · ${esc(entry.type)}<br><span class="muted">${esc(entry.desc)}</span></label>`).join('')}<label style="font-size:12px;color:#123b2c"><input type="checkbox" name="confirmVerified"> 本人确认属实，直接作为已核验实战证据参与匹配</label><button class="btn small primary" type="submit">添加所选经历</button></form>`:''}</details>
@@ -7568,6 +7614,59 @@ function ccHomeWarehouseHTML(cp){
       :matches.length?`<div class="cc-job-list" style="margin-top:10px">${matches.map(m=>ccJobCard(m,cp)).join('')}</div>`:''}
   </section>`;
 }
+let ccCourseworkDraft = {open:false, title:'', desc:'', role:'', url:''};
+function ccCourseworkBridgeHTML(cp){
+  const CC=window.CC;
+  if(!cp.personalized || CC.hasHardcoreExperience(cp)) return '';
+  const cwEvidences=(cp.evidences||[]).filter(ev=>CC.evidenceKindOf(ev)==='coursework');
+  const existingTitles=new Set((state.profile.achievements||[]).map(a=>courseKey(a.title)));
+  const profileCourses=(state.profile.courses||[]).filter(c=>['已通过','已修','completed','在修'].includes(c.status));
+  const majorCourses=CC.coursesOfMajor(cp.major)||[];
+  const suggestions=[];
+  for(const c of profileCourses){
+    const label=/课程设计|课设|实训|实践|实验|论文|设计/.test(c.name)?c.name:`《${c.name}》课程设计/大作业`;
+    if(!existingTitles.has(courseKey(label))&&!existingTitles.has(courseKey(c.name))) suggestions.push({title:label,hint:`基于已修课程《${c.name}》完成的课程设计或实验项目`});
+    if(suggestions.length>=5) break;
+  }
+  if(suggestions.length<4){
+    for(const mc of majorCourses){
+      const label=mc.assignment?.title||`《${mc.name}》课程设计`;
+      if(!existingTitles.has(courseKey(label))&&!suggestions.some(s=>s.title===label)){
+        const skNames=(mc.teaches||[]).map(CC.skillName).join('、');
+        suggestions.push({title:label,hint:skNames?`覆盖 ${skNames}，完成课程设计与测试记录`:'专业核心课程设计'});
+      }
+      if(suggestions.length>=5) break;
+    }
+  }
+  const coveredCourseSkills=[...new Set([...(cp.completedCourseSkillIds||[]),...(cp.completedCourseIds||[]).flatMap(id=>CC.COURSE_BY_ID.get(id)?.teaches||[]),...cwEvidences.flatMap(e=>e.skillIds||[])])];
+  return `<section class="card cc-section cc-coldstart-box" style="margin:12px 0" aria-label="课程设计与课设求职接入">
+    <div class="cc-job-top">
+      <div>
+        <h2 style="margin:0;font-size:16px;color:#123b2c">🎓 暂无简历或项目？把「课程设计 / 课设 / 专业实验」接入就业画像</h2>
+        <p class="muted" style="font-size:12.5px;margin:4px 0 0">针对尚未积累实习或独立项目的同学，系统自动提高<b>课程设计与实验成果</b>在方向推荐、入门实习匹配和定向简历中的权重（当前已识别 <b>${profileCourses.length}</b> 门课程、<b>${cwEvidences.length}</b> 项课设证据${coveredCourseSkills.length?`，点亮 ${coveredCourseSkills.slice(0,5).map(CC.skillName).map(esc).join('、')}`:''}）。</p>
+      </div>
+      <button type="button" class="btn small primary" data-action="cc-toggle-cw-form">${ccCourseworkDraft.open?'收起录入面板':'＋ 录入课程设计 / 课设'}</button>
+    </div>
+    ${suggestions.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px">
+      <span class="muted" style="font-size:11.5px;font-weight:700">一键从课程生成课设：</span>
+      ${suggestions.map(s=>`<button type="button" class="fchip" data-action="cc-prefill-cw" data-title="${esc(s.title)}" data-hint="${esc(s.hint)}">＋ ${esc(s.title)}</button>`).join('')}
+      <button type="button" class="btn small" style="margin-left:auto" data-action="cc-goto-courses">去建档勾选更多已修课 →</button>
+    </div>`:''}
+    ${ccCourseworkDraft.open?`<form id="cc-coursework-form" class="cc-mini-form" style="margin-top:12px;max-width:680px;background:var(--paper);padding:12px 14px;border-radius:10px;border:1px solid var(--line)">
+      ${!state.profile.major?`<label>所在专业（用于匹配专业课程与方向）<input name="cwMajor" value="${esc(cp.majorRaw||'')}" placeholder="如：计算机科学与技术 / 机械电子工程 / 汉语言文学"></label>`:''}
+      <label>课程设计 / 课设 / 大作业名称<input name="cwTitle" required maxlength="120" value="${esc(ccCourseworkDraft.title)}" placeholder="如：《数据库原理》选课系统课程设计 / STM32 智能小车课设"></label>
+      <label>我负责的核心内容、所用技术或实验结论<textarea name="cwDesc" required maxlength="1200" placeholder="写明你在课设中做了什么、用了什么工具/语言（如 Java、Spring Boot、MySQL、SolidWorks、问卷分析等）及结果">${esc(ccCourseworkDraft.desc)}</textarea></label>
+      <div class="form-grid" style="gap:10px">
+        <label>个人角色分工 <small class="muted">选填</small><input name="cwRole" maxlength="100" value="${esc(ccCourseworkDraft.role)}" placeholder="如：独立完成 / 小组后端与数据库设计"></label>
+        <label>实验报告或代码链接 <small class="muted">选填 HTTP(S)</small><input name="cwUrl" type="url" value="${esc(ccCourseworkDraft.url)}" placeholder="https://github.com/..."></label>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button type="submit" class="btn small primary">⚡ 计入就业画像并重算方向与岗位匹配</button>
+        <span class="muted" style="font-size:11.5px">写入后将同步至「建立档案 → 已有成果」与「A4 定向简历」</span>
+      </div>
+    </form>`:''}
+  </section>`;
+}
 function ccEmploymentHome(cp){
   const CC=window.CC,j=state.jobs,reqs=ccPublicJobs(),now=new Date();
   const dirs=CC.careerDirections(cp.personalized?cp:{...cp,major:null,preferences:{},completedCourseIds:[],completedCourseSkillIds:[],inProgressCourseIds:[],inProgressCourseSkillIds:[],evidences:[]},reqs,now);
@@ -7586,11 +7685,11 @@ function ccEmploymentHome(cp){
   const kpiStrip=cp.personalized?`<div class="cc-kpi-grid" aria-label="求职就绪度概览">
     <div class="cc-kpi-card"><div class="k-label">无硬门槛阻拦</div><div class="k-val">${matches.length}</div><div class="k-sub">其中 ${worthOrPriority} 个值得投递/冲刺</div></div>
     <div class="cc-kpi-card"><div class="k-label">推荐主攻方向</div><div class="k-val" style="font-size:17px;line-height:1.4">${esc(catalog[0]?.name||'待探索')}</div><div class="k-sub">${catalog[0]?catalog[0].count+' 条在库真实岗位':'选择专业获取推荐'}</div></div>
-    <div class="cc-kpi-card"><div class="k-label">当前最高匹配</div><div class="k-val">${topScore!=null?topScore+'/100':'待建档'}</div><div class="k-sub">${esc(featured[0]?.req.title?.slice(0,14)||'补充成果可提升匹配')}</div></div>
+    <div class="cc-kpi-card"><div class="k-label">当前最高匹配</div><div class="k-val">${topScore!=null?topScore+'/100':'待建档'}</div><div class="k-sub">${esc(featured[0]?.req.title?.slice(0,14)||'补充课设或成果可提分')}</div></div>
     <div class="cc-kpi-card"><div class="k-label">优先补齐短板</div><div class="k-val" style="font-size:17px;line-height:1.4;color:var(--orange)">${esc(action?.skillName||'已齐备')}</div><div class="k-sub">${action?`约 ${action.hours} 小时可完成实战验收`:'可直接准备定制简历'}</div></div>
   </div>`:'';
-  return `<div class="kicker">就业 · 八维结构化字段对表 × 靶向成长工作台</div><h1 class="page-title">八维字段对表筛准岗位，<em>单点聚焦补齐核心硬技能。</em></h1>
-    ${ccEmploymentNav()}${ccDualEngineBarHTML()}${ccProfileBar(cp)}${ccQuickToolsHTML()}${!state.profile.saved?`<form id="cc-quick-form" class="card cc-mini-form"><label>按专业探索 <input name="major" value="${esc(cp.majorRaw)}" placeholder="例如 机械电子工程"></label><button class="btn small primary" type="submit">更新探索方向</button></form>`:''}${ccPreferences(cp)}${ccCompareHTML(cp)}${kpiStrip}${ccHomeWarehouseHTML(cp)}
+  return `<div class="kicker">就业 · 先定感兴趣的方向 × 再按画像对表岗位</div><h1 class="page-title">先选定你感兴趣的职业方向，<em>再用课程/课设与项目精准对表岗位。</em></h1>
+    ${ccEmploymentNav()}${ccDualEngineBarHTML()}${ccProfileBar(cp)}${ccQuickToolsHTML()}${!state.profile.saved?`<form id="cc-quick-form" class="card cc-mini-form"><label>按专业探索 <input name="major" value="${esc(cp.majorRaw)}" placeholder="例如 机械电子工程"></label><button class="btn small primary" type="submit">更新探索方向</button></form>`:''}${ccPreferences(cp)}${ccCompareHTML(cp)}${kpiStrip}${ccCourseworkBridgeHTML(cp)}
     <section class="cc-section"><div class="cc-job-top"><h2>方向与岗位族</h2><button class="btn small" data-action="cc-explore-more">${j.exploreMore?'收起其他方向':'探索其他方向'}</button></div>
       <div class="cc-direction-grid">${shown.map(d=>`<article class="card cc-direction-card"><div class="cc-job-top"><h3>${esc(d.name)}</h3>${cp.personalized?`<span class="tag blue">${d.score==null?'依据不足':d.signals.length?'方向指数 '+d.score+'/100':'按专业探索'}</span>`:''}</div>
         <div class="muted">${d.count} 条岗位 · ${d.excluded?'暂不考虑':cp.preferences.primaryDirectionId===d.id?'主方向':cp.preferences.secondaryDirectionIds.includes(d.id)?'次方向':'可探索'}</div>
@@ -9330,6 +9429,29 @@ document.addEventListener('click',e=>{
   }
   else if(a==='cc-persona'){ applyPersona(el.dataset.id); }
   else if(a==='cc-quick'){ state.jobs.quickExplore=true; render(); }
+  else if(a==='cc-coursework-start'){
+    state.jobs.quickExplore=true;
+    state.jobs.personalized=true;
+    ccCourseworkDraft.open=true;
+    render();
+  }
+  else if(a==='cc-toggle-cw-form'){
+    ccCourseworkDraft.open=!ccCourseworkDraft.open;
+    render();
+  }
+  else if(a==='cc-prefill-cw'){
+    ccCourseworkDraft.open=true;
+    ccCourseworkDraft.title=el.dataset.title||'';
+    if(!ccCourseworkDraft.desc) ccCourseworkDraft.desc=el.dataset.hint||'';
+    render();
+    document.querySelector('#cc-coursework-form textarea[name="cwDesc"]')?.focus();
+  }
+  else if(a==='cc-goto-courses'){
+    state.module='profile';
+    state.profilePage=1;
+    render();
+    window.scrollTo({top:0});
+  }
   else if(a==='cc-view'){ ccMoveEmployment(el.dataset.mode); }
   else if(a==='cc-lead-company'){
     const j=state.jobs;
@@ -9770,10 +9892,45 @@ document.addEventListener('submit',e=>{
     ccRoadmapReviews.delete(id);
     render(); return;
   }
-  if(!['cc-quick-form','cc-preferences-form','cc-evidence-form','cc-resume-form','cc-resume-confirm','cc-full-resume-parse','cc-full-resume-apply','cc-lead-form','cc-warehouse-form','cc-calendar-form','cc-postmortem-form','cc-cloud-cfg-form','cc-ms-connect-form'].includes(form.id)) return;
+  if(!['cc-quick-form','cc-coursework-form','cc-preferences-form','cc-evidence-form','cc-resume-form','cc-resume-confirm','cc-full-resume-parse','cc-full-resume-apply','cc-lead-form','cc-warehouse-form','cc-calendar-form','cc-postmortem-form','cc-cloud-cfg-form','cc-ms-connect-form'].includes(form.id)) return;
   e.preventDefault();
   const fields=new FormData(form);
   const value=name=>String(fields.get(name)||'').trim();
+  if(form.id==='cc-coursework-form'){
+    const cwTitle=value('cwTitle'), cwDesc=value('cwDesc'), cwRole=value('cwRole'), cwUrl=value('cwUrl'), cwMajor=value('cwMajor');
+    if(!cwTitle||!cwDesc){ toast('请填写课程设计名称与你完成的核心内容','warn'); return; }
+    if(cwUrl&&(!URL.canParse(cwUrl)||!/^https?:\/\//i.test(cwUrl))){ toast('请填写有效的 HTTP(S) 链接或留空','warn'); return; }
+    if(cwMajor&&!state.profile.major) state.profile.major=cwMajor;
+    const item=createAchievement('课程作业', cwTitle, cwDesc);
+    item.role=cwRole;
+    if(cwUrl){ item.artifactUrl=cwUrl; item.materials=[cwUrl]; }
+    item.verificationStatus='user_confirmed';
+    item.verified=true;
+    const skillIds=[...new Set(CC.extractSkillsFromText([cwTitle,cwDesc,cwRole].filter(Boolean).join(' ')).map(s=>s.skillId))];
+    state.profile.evidences=[...(state.profile.evidences||[]),{
+      id:item.id,
+      type:'课设',
+      title:cwTitle,
+      description:[cwRole?'角色：'+cwRole:'',cwDesc].filter(Boolean).join(' · '),
+      skillIds,
+      observedAt:new Date().toISOString(),
+      artifactUrl:cwUrl||null,
+      hasPortfolio:Boolean(cwUrl),
+      verificationStatus:'user_confirmed',
+      verified:true,
+      metrics:[],
+    }];
+    state.profile.saved=true;
+    if(!state.paths.includes('jiuye')) state.paths.push('jiuye');
+    j.personaId=null;
+    j.personalized=true;
+    ccCourseworkDraft={open:false,title:'',desc:'',role:'',url:''};
+    ccClearProfileCopilotCache();
+    ccJdCopilotRuns.clear();
+    render();
+    toast(`已将课设「${cwTitle}」接入就业画像${skillIds.length?`（识别 ${skillIds.length} 项技能）`:''}，方向与岗位匹配已更新 ✓`);
+    return;
+  }
   if(form.id==='cc-full-resume-parse'){
     const raw=value('fullResume');
     const parsed=ccParseFullResume(raw,'项目');
@@ -9833,7 +9990,6 @@ document.addEventListener('submit',e=>{
     j.openJobId=null;
     render();
     toast(`建档完成：已导入 ${added} 段${confirmAll?'已核验':'待核验'}实战经历并重算匹配`);
-    void ccRunHomeWarehousePick();
     return;
   }
   if(form.id==='cc-ms-connect-form'){
