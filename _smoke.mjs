@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
+import { once } from 'node:events';
 import { createHash } from 'node:crypto';
+import { createCourseCompassServer } from './_serve.mjs';
 import { validateSkillCandidates } from './_employment-jd-model.mjs';
 import { entryJobType, smartRecruitersPosting, applySourceObservations } from './_fetch-official-jobs.mjs';
 import { jobLinkIdentity } from './_employment-data.mjs';
@@ -399,6 +401,79 @@ assert.equal(offlineStatus.available, false);
   assert.equal(wfRes.model, 'glm-4.5-flash');
   assert.equal(wfRes.failoverFrom, 'Qwen/Qwen3.8-Flash-Next');
   resetLlmRouterState();
+}
+{
+  const mergedProfile = CC.ccProfileFromState({
+    profile: {
+      major: '计算机科学与技术',
+      grade: '大三',
+      graduationDate: '2028-06',
+      courses: [
+        { name: '数据库原理', status: '已修', school: '示例大学', major: '计算机科学与技术', version: '2024', source: '手动录入' },
+      ],
+      achievements: [
+        {
+          id: 'CG-1122334455667788',
+          type: '项目',
+          title: '校园交易检索服务',
+          desc: '完成核心接口实现',
+          role: '负责 Spring Boot 与 Redis 缓存模块',
+          materials: ['https://github.com/example/campus-search', '压测报告截图'],
+          verificationStatus: 'user_confirmed',
+        },
+      ],
+    },
+  });
+  assert.ok(mergedProfile.completedCourseSkillIds.includes('sql_rdbms') || mergedProfile.completedCourseIds.includes('cs_db'));
+  const mergedEv = mergedProfile.evidences.find(e => e.id === 'CG-1122334455667788');
+  assert.ok(mergedEv);
+  assert.equal(mergedEv.artifactUrl, 'https://github.com/example/campus-search');
+  assert.equal(mergedEv.hasPortfolio, true);
+  assert.ok(mergedEv.skillIds.includes('spring_boot') && mergedEv.skillIds.includes('redis'));
+
+  const idServer = createCourseCompassServer({ identityDbPath: ':memory:' });
+  idServer.listen(0, '127.0.0.1');
+  await once(idServer, 'listening');
+  const idOrigin = `http://127.0.0.1:${idServer.address().port}`;
+  const idApi = async (route, token = '', data = undefined, extraHeaders = {}) => {
+    const headers = { Authorization: 'Bearer ' + token, ...extraHeaders };
+    if (data !== undefined) headers['Content-Type'] = 'application/json';
+    const res = await fetch(`${idOrigin}/api/${route}`, {
+      method: data !== undefined ? 'POST' : 'GET',
+      headers,
+      body: data !== undefined ? JSON.stringify(data) : undefined,
+    });
+    return [res.status, await res.json()];
+  };
+  try {
+    const createAccount = async (name) => {
+      const [st, body] = await idApi('register', '', { name, password: 'local-test-password' });
+      assert.equal(st, 200);
+      return body.token;
+    };
+    const alice = await createAccount('alice');
+    const bob = await createAccount('bob');
+    const [, a] = await idApi('session', alice);
+    const [, b] = await idApi('session', bob);
+    assert.notEqual(a.key, b.key);
+    assert.equal((await idApi('session'))[0], 401);
+    assert.equal((await idApi('login', '', { name: 'alice', password: 'wrong-password' }))[0], 401);
+    assert.equal((await idApi('profile/delete', bob, { generation: a.generation }))[0], 409);
+    assert.equal((await idApi('session', alice))[1].key, a.key);
+    const otherSession = (await idApi('login', '', { name: 'alice', password: 'local-test-password' }))[1].token;
+    assert.equal((await idApi('profile/delete', alice, { generation: a.generation }))[0], 200);
+    assert.equal((await idApi('session', alice))[1].id, a.id);
+    assert.notEqual((await idApi('session', alice))[1].generation, a.generation);
+    assert.equal((await idApi('session', otherSession))[0], 401);
+    assert.deepEqual((await idApi('session', bob))[1], b);
+    const relogin = (await idApi('login', '', { name: 'alice', password: 'local-test-password' }))[1].token;
+    assert.notEqual((await idApi('session', relogin))[1].key, a.key);
+    assert.equal((await idApi('logout', bob, {}))[0], 200);
+    assert.equal((await idApi('session', bob))[0], 401);
+    assert.equal((await idApi('session', alice, undefined, { Origin: 'https://evil.example.com' }))[0], 403);
+  } finally {
+    await new Promise((resolve, reject) => idServer.close(err => err ? reject(err) : resolve()));
+  }
 }
 console.log('HASH', CC.checkUpdate(null));
 console.log('SMOKE_OK');

@@ -851,6 +851,81 @@ try {
     rmdirSync(reviewDirectory);
   }
 
+  // Verify merged local encrypted student profiles, course review, achievement evidence link, and version history
+  const vaultContext = await browser.newContext({ locale: 'zh-CN', timezoneId: 'Asia/Shanghai' });
+  try {
+    const vaultPage = await vaultContext.newPage();
+    vaultPage.on('pageerror', error => errors.push(error.message));
+    await vaultPage.route('**/*', route => route.request().url().startsWith(origin + '/')
+      ? route.continue()
+      : route.fulfill({ status: 200, body: '' }));
+    await vaultPage.goto(origin);
+    await vaultPage.locator('[data-action="account-open"]').first().click();
+    await vaultPage.locator('#cc-name').fill('e2e_alice');
+    await vaultPage.locator('#cc-pass').fill('local-vault-pass');
+    await vaultPage.locator('#account-form button[value="register"]').click();
+    await vaultPage.locator('#account-label').filter({ hasText: 'e2e_alice' }).waitFor();
+
+    await vaultPage.locator('.nav-item[data-module="profile"]').click();
+    await vaultPage.locator('#basic-school').fill('VAULT_PRIVATE_UNIV');
+    await vaultPage.locator('#basic-major').fill('计算机科学与技术');
+    await vaultPage.locator('#basic-grade').selectOption('大三');
+    await vaultPage.locator('#basic-rank').fill('50');
+    await vaultPage.locator('#basic-rankTotal').fill('30');
+    assert.match(await vaultPage.locator('#error-rank').textContent(), /不能超过专业总人数/);
+    await vaultPage.locator('#basic-rank').fill('8');
+    assert.equal(await vaultPage.locator('#error-rank').textContent(), '');
+    await vaultPage.locator('[data-action="profile-next"]').click();
+
+    await vaultPage.locator('[data-action="course-mode"][data-mode="manual"]').click();
+    await vaultPage.locator('#course-input').fill('数据库原理');
+    await vaultPage.locator('[data-action="course-add"]').click();
+    await vaultPage.locator('#batch-version').fill('2024级培养方案');
+    await vaultPage.locator('[data-action="course-review-save"]').click();
+    assert.ok(await vaultPage.getByText('2024级培养方案', { exact: false }).isVisible());
+    await vaultPage.locator('[data-action="profile-next"]').click();
+
+    await vaultPage.locator('#ach-type').selectOption('项目');
+    await vaultPage.locator('#ach-input').fill('高并发选课网关');
+    await vaultPage.locator('#ach-desc').fill('完成核心限流模块');
+    await vaultPage.locator('[data-action="ach-add"]').click();
+    await vaultPage.locator('[data-action="ach-evidence"]').first().click();
+    await vaultPage.locator('#ev-role').fill('负责 Spring Boot 与 Redis Lua 限流器');
+    await vaultPage.locator('#ev-materials').fill('https://example.com/course-gateway');
+    await vaultPage.locator('.nav-item[data-module="profile"]').click();
+    await vaultPage.locator('[data-action="profile-next"]').click();
+    await vaultPage.locator('[data-action="profile-save"]').click();
+
+    const encryptedCheck = await vaultPage.evaluate(() => {
+      const keys = Object.keys(localStorage).filter(k => k.startsWith('cc.profile.'));
+      const raw = keys.length ? localStorage.getItem(keys[0]) : '';
+      const plain = localStorage.getItem('course-compass-v1') || '';
+      return { keyCount: keys.length, raw, plain };
+    });
+    assert.equal(encryptedCheck.keyCount, 1);
+    assert.ok(!encryptedCheck.raw.includes('VAULT_PRIVATE_UNIV'));
+    assert.ok(!encryptedCheck.plain.includes('VAULT_PRIVATE_UNIV'));
+
+    await vaultPage.locator('.nav-item[data-module="profile"]').click();
+    await vaultPage.locator('[data-action="profile-history"]').click();
+    assert.ok(await vaultPage.locator('#confirmed-view').getByText('VAULT_PRIVATE_UNIV', { exact: false }).first().isVisible());
+    await vaultPage.locator('#profile-history button[type="submit"]').click();
+
+    const profileDlPromise = vaultPage.waitForEvent('download');
+    await vaultPage.locator('[data-action="profile-export"]').click();
+    const exportedJson = JSON.parse(readFileSync(await (await profileDlPromise).path(), 'utf8'));
+    assert.equal(exportedJson.schemaVersion, 2);
+    assert.equal(exportedJson.account, 'e2e_alice');
+    assert.equal(exportedJson.confirmationHistory.length, 1);
+
+    vaultPage.once('dialog', dialog => dialog.accept());
+    await vaultPage.locator('[data-action="profile-delete"]').click();
+    await vaultPage.locator('#account-label').filter({ hasText: 'e2e_alice' }).waitFor();
+    await vaultPage.getByText('查看历史档案（0）', { exact: false }).waitFor();
+  } finally {
+    await vaultContext.close();
+  }
+
   assert.deepEqual(errors, []);
   console.log('Employment browser checks passed');
 } finally {

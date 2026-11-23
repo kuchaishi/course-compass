@@ -1573,23 +1573,29 @@
     const major = majorOf(p.major);
     const courseRecords = (p.courses || []).map(c => ({ ...c, id: c.id || resolveCourseId(c.name, major) }));
     const listed = new Set(courseRecords.map(course => course.id));
+    const isCompletedStatus = status => ['已通过', '已修', 'completed'].includes(status);
     const completedCourseIds = [...new Set([
       ...(p.completedCourseIds || []).filter(id => !listed.has(id)),
-      ...courseRecords.filter(course => ['已通过', 'completed'].includes(course.status)).map(course => course.id),
+      ...courseRecords.filter(course => isCompletedStatus(course.status)).map(course => course.id),
     ].filter(Boolean))];
     const inProgress = courseRecords.filter(course => ['在修', 'in_progress'].includes(course.status));
-    const completedCourseSkillIds = [...new Set(courseRecords.filter(course => ['已通过', 'completed'].includes(course.status))
+    const completedCourseSkillIds = [...new Set(courseRecords.filter(course => isCompletedStatus(course.status))
       .flatMap(course => extractSkillsFromText(course.name).map(skill => skill.skillId)))];
     const inProgressCourseSkillIds = [...new Set(inProgress.flatMap(course => extractSkillsFromText(course.name).map(skill => skill.skillId)))];
     const evidences = (p.evidences || []).map(ev => ({ ...ev, type: canonicalEvidenceType(ev) }));
     for (const [index, achievement] of (p.achievements || []).entries()) {
       if (evidences.some(e => e.id === achievement.id || (!achievement.id && e.title === achievement.title))) continue;
-      const text = (achievement.title || '') + ' ' + (achievement.desc || '');
+      const materials = Array.isArray(achievement.materials) ? achievement.materials.filter(Boolean) : [];
+      const suggestedText = Array.isArray(achievement.suggestedSkills) ? achievement.suggestedSkills.join(' ') : '';
+      const text = [achievement.title, achievement.desc, achievement.role, achievement.originalText, suggestedText].filter(Boolean).join(' ');
+      const materialUrl = materials.find(line => /^https?:\/\//i.test(String(line).trim()));
+      const resolvedUrl = achievement.artifactUrl || (materialUrl ? String(materialUrl).trim() : null);
       const draftEv = { id: achievement.id || 'ev_legacy_' + (djb2(text + '|' + achievement.type) >>> 0).toString(36),
-        title: achievement.title || '成果 ' + (index + 1), description: achievement.desc || '', type: achievement.type,
+        title: achievement.title || '成果 ' + (index + 1), description: [achievement.role ? '角色：' + achievement.role : '', achievement.desc || ''].filter(Boolean).join(' · '), type: achievement.type,
         courseId: resolveCourseId(achievement.title, major), skillIds: [...new Set(extractSkillsFromText(text).map(s => s.skillId))],
         verificationStatus: achievement.verificationStatus || 'unverified', observedAt: achievement.observedAt || null,
-        artifactUrl: achievement.artifactUrl || null, verified: achievement.verificationStatus === 'user_confirmed' || !!achievement.verified,
+        artifactUrl: resolvedUrl, hasPortfolio: !!(resolvedUrl || materials.length),
+        verified: achievement.verificationStatus === 'user_confirmed' || !!achievement.verified,
         metrics: Array.isArray(achievement.metrics) ? achievement.metrics : [] };
       draftEv.type = canonicalEvidenceType(draftEv);
       evidences.push(draftEv);

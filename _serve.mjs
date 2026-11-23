@@ -6,6 +6,7 @@ import { evidenceReviewProjection, reviewEvidenceWithOllama } from './_employmen
 import { createEmploymentCatalogHandler } from './_employment-catalog-api.mjs';
 import { callCloudChat, createEmploymentLlmHandler, discoverLocalModels, getEnvCloudConfig, getEnvCloudProviders } from './_employment-llm.mjs';
 import { createEmploymentLiveApiHandler } from './_employment-live-api.mjs';
+import { createLocalIdentityHandler, defaultIdentityDbPath } from './_employment-identity-api.mjs';
 
 const page = new URL('./index.html', import.meta.url);
 const reviewPath = '/api/employment/evidence-review';
@@ -77,8 +78,10 @@ export function createCourseCompassServer({
   jobsDbPath,
   calendarDbPath,
   jdTextDbPath,
+  identityDbPath = ':memory:',
 } = {}) {
   let reviewInProgress = false;
+  const identity = createLocalIdentityHandler({ dbPath: identityDbPath });
   const rateBuckets = new Map();
   const checkRateLimit = (request) => {
     const ip = String(request.headers['x-forwarded-for'] || request.socket?.remoteAddress || 'unknown').split(',')[0].trim();
@@ -112,6 +115,7 @@ export function createCourseCompassServer({
       request.resume();
       return send(429, { error: 'RATE_LIMIT_EXCEEDED' });
     }
+    if (await identity(request, pathname, send)) return;
     const readLocalJson = localJsonReader(request);
     if (pathname.startsWith('/api/employment/live/') || pathname === '/api/employment/warehouse/search' || pathname === '/api/employment/calendar') {
       if (!isLocalBrowserAllowed(request)) {
@@ -184,6 +188,7 @@ export function createCourseCompassServer({
     }
   });
   server.requestTimeout = 120000;
+  server.on('close', () => identity.close?.());
   return server;
 }
 
@@ -197,10 +202,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const resolvedGrowthModel = enableLocalOllama ? (process.env.CC_GROWTH_LOCAL_MODEL || resolvedModel) : undefined;
   const port = Number(process.env.PORT) || 8090;
   const host = process.env.HOST || '127.0.0.1';
+  const identityDbPath = process.env.CC_IDENTITY_DB || defaultIdentityDbPath();
   const envCloud = getEnvCloudConfig();
   createCourseCompassServer({
     model: resolvedModel,
     growthModel: resolvedGrowthModel,
+    identityDbPath,
   }).listen(port, host, () => {
     console.log(`Course Compass at http://${host}:${port}/ | Copilot: ${resolvedModel || (envCloud ? `${envCloud.model} (cloud-api, zero-gpu)` : 'expert-copilot-v2 (zero-gpu)')}`);
   });

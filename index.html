@@ -55,6 +55,13 @@ p{margin:0 0 10px}
 p:last-child{margin-bottom:0}
 
 /* ---------- shell ---------- */
+[hidden]{display:none!important}
+#vault-error{position:sticky;top:0;z-index:100;padding:10px 18px;background:var(--redsoft);color:var(--red);border-bottom:1px solid var(--redline);font-size:13px;display:flex;align-items:center;gap:10px;justify-content:center}
+#profile-history,#account-dialog{width:min(92vw,640px);max-height:84vh;overflow:auto;border:1px solid var(--line);border-radius:14px;padding:22px;background:var(--paper);color:var(--ink);box-shadow:var(--shadow-lg)}
+#account-dialog{width:min(92vw,440px)}
+#profile-history::backdrop,#account-dialog::backdrop{background:#17241d77;backdrop-filter:blur(2px)}
+#profile-history h2,#account-dialog h2{margin-top:0;font-family:var(--serif)}
+#confirmed-view li{overflow-wrap:anywhere}
 #app{display:flex;min-height:100vh}
 #sidebar{
   width:248px;flex:0 0 248px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;
@@ -88,9 +95,10 @@ p:last-child{margin-bottom:0}
 .sp-dots{display:flex;gap:5px;margin-top:8px}
 .sp-dot{width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(201,220,205,.3)}
 .sp-dot.on{border-color:transparent}
-.side-foot{padding:12px;border-top:1px solid rgba(201,220,205,.14)}
+.side-foot{padding:12px;border-top:1px solid rgba(201,220,205,.14);display:flex;flex-direction:column;gap:8px}
 .side-foot button{width:100%;background:transparent;border:1px solid rgba(201,220,205,.25);color:var(--seamuted);border-radius:9px;padding:7px;font-size:12px}
 .side-foot button:hover{color:#fff;border-color:rgba(201,220,205,.5)}
+.side-account-chip{display:block;font-size:12px;color:#dff2e5;background:rgba(143,214,180,.13);border:1px solid rgba(143,214,180,.3);border-radius:9px;padding:7px 10px;font-weight:700;word-break:break-all}
 
 #main{flex:1;min-width:0;display:flex;flex-direction:column}
 #topbar{
@@ -227,6 +235,9 @@ mark{background:var(--ambersoft);color:var(--amber);border-radius:3px;padding:0 
 .field{display:flex;flex-direction:column;gap:6px}
 .field.full{grid-column:1/-1}
 .field label{font-size:12.5px;font-weight:800;color:var(--ink)}
+.field-error{color:var(--red);font-size:12px}
+.field-error:empty,#pct-preview:empty{display:none}
+.field input[aria-invalid="true"]{border-color:var(--red)}
 .field label small{font-weight:600;color:var(--muted)}
 .field input,.field select,.field textarea{
   background:var(--paper);border:1.5px solid var(--line2);border-radius:10px;padding:10px 13px;font-size:14px;min-height:44px;transition:border-color .15s,box-shadow .15s;width:100%;
@@ -370,6 +381,9 @@ mark{background:var(--ambersoft);color:var(--amber);border-radius:3px;padding:0 
 .ev-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:18px;align-items:start}
 .ev-in{background:linear-gradient(160deg,var(--warm),#faf1e2);border:1px solid var(--warmline);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
 .ev-in textarea{width:100%;min-height:150px;resize:vertical;background:var(--paper);border:1.5px solid var(--warmline);border-radius:11px;padding:13px 15px;font-size:14px;line-height:1.8}
+.ev-in .field{margin-bottom:12px;min-width:0}
+.ev-in .field select{width:100%;min-width:0}
+.ev-in #ev-materials{min-height:70px}
 .ev-in textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-bg);outline:none}
 .scenario-row{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 14px}
 .sc-chip{font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:99px;border:1px solid var(--warmline);background:var(--paper);color:var(--muted)}
@@ -718,6 +732,7 @@ mark{background:var(--ambersoft);color:var(--amber);border-radius:3px;padding:0 
 </style>
 </head>
 <body>
+<div id="vault-error" role="alert" hidden>浏览器未能保存最近的修改。请检查存储空间，再点 <button class="btn small" data-action="profile-retry">重试保存</button>。</div>
 <div id="app">
   <aside id="sidebar">
     <div class="brand">
@@ -772,8 +787,13 @@ mark{background:var(--ambersoft);color:var(--amber);border-radius:3px;padding:0 
       </button>
     </nav>
     <div class="side-profile" id="side-profile"></div>
-    <div class="side-foot">
-      <button data-action="reset-all">重置演示数据</button>
+    <div class="side-foot" id="side-foot">
+      <button data-action="account-open" id="account-open-btn">🔐 本机加密账号</button>
+      <div id="account-active-box" hidden style="display:flex;flex-direction:column;gap:6px">
+        <span class="side-account-chip" id="account-label"></span>
+        <button data-action="logout">退出本机账号</button>
+      </div>
+      <button data-action="reset-all" id="reset-demo-btn">重置演示数据</button>
     </div>
   </aside>
 
@@ -803,6 +823,29 @@ mark{background:var(--ambersoft);color:var(--amber);border-radius:3px;padding:0 
   <div class="rd-body" id="rd-body"></div>
   <div class="rd-foot">每条信息附来源与可信等级：<b>A</b> 官方 · <b>B</b> 经验 · <b>C</b> 传闻。推送频率可随时关闭；所有日期以当年官方通知为准。</div>
 </aside>
+<dialog id="profile-history" aria-labelledby="history-title">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
+    <h2 id="history-title">历史确认档案</h2>
+    <form method="dialog"><button class="btn small" type="submit">关闭</button></form>
+  </div>
+  <label class="field" style="margin-bottom:14px"><span>选择确认记录</span><select id="history-version"></select></label>
+  <section id="confirmed-view" class="summary-box"></section>
+</dialog>
+<dialog id="account-dialog" aria-labelledby="account-dialog-title">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+    <h2 id="account-dialog-title">🔐 本机加密账号</h2>
+    <form method="dialog"><button class="btn small" type="submit" aria-label="关闭">✕</button></form>
+  </div>
+  <p id="account-note" role="status" class="muted" style="font-size:13px;line-height:1.65;margin-bottom:12px">使用本机账号在当前浏览器中独立加密保存个人档案、草稿与确认历史（AES-GCM 256 位，共用设备互不可见）。</p>
+  <form id="account-form">
+    <div class="field" style="margin-bottom:12px"><label for="cc-name">账号</label><input id="cc-name" name="username" autocomplete="username" required maxlength="60" placeholder="1–60 个字符，如：alice"></div>
+    <div class="field" style="margin-bottom:14px"><label for="cc-pass">密码（至少 8 个字符）</label><input id="cc-pass" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="256" placeholder="至少 8 个字符"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn primary" type="submit" value="login">登录</button>
+      <button class="btn" type="submit" value="register">创建本机账号</button>
+    </div>
+  </form>
+</dialog>
 <div id="toasts"></div>
 
 <script>
@@ -2384,23 +2427,29 @@ window.CC_DATA = {"skills":[{"id":"python","name":"Python","category":"编程"},
     const major = majorOf(p.major);
     const courseRecords = (p.courses || []).map(c => ({ ...c, id: c.id || resolveCourseId(c.name, major) }));
     const listed = new Set(courseRecords.map(course => course.id));
+    const isCompletedStatus = status => ['已通过', '已修', 'completed'].includes(status);
     const completedCourseIds = [...new Set([
       ...(p.completedCourseIds || []).filter(id => !listed.has(id)),
-      ...courseRecords.filter(course => ['已通过', 'completed'].includes(course.status)).map(course => course.id),
+      ...courseRecords.filter(course => isCompletedStatus(course.status)).map(course => course.id),
     ].filter(Boolean))];
     const inProgress = courseRecords.filter(course => ['在修', 'in_progress'].includes(course.status));
-    const completedCourseSkillIds = [...new Set(courseRecords.filter(course => ['已通过', 'completed'].includes(course.status))
+    const completedCourseSkillIds = [...new Set(courseRecords.filter(course => isCompletedStatus(course.status))
       .flatMap(course => extractSkillsFromText(course.name).map(skill => skill.skillId)))];
     const inProgressCourseSkillIds = [...new Set(inProgress.flatMap(course => extractSkillsFromText(course.name).map(skill => skill.skillId)))];
     const evidences = (p.evidences || []).map(ev => ({ ...ev, type: canonicalEvidenceType(ev) }));
     for (const [index, achievement] of (p.achievements || []).entries()) {
       if (evidences.some(e => e.id === achievement.id || (!achievement.id && e.title === achievement.title))) continue;
-      const text = (achievement.title || '') + ' ' + (achievement.desc || '');
+      const materials = Array.isArray(achievement.materials) ? achievement.materials.filter(Boolean) : [];
+      const suggestedText = Array.isArray(achievement.suggestedSkills) ? achievement.suggestedSkills.join(' ') : '';
+      const text = [achievement.title, achievement.desc, achievement.role, achievement.originalText, suggestedText].filter(Boolean).join(' ');
+      const materialUrl = materials.find(line => /^https?:\/\//i.test(String(line).trim()));
+      const resolvedUrl = achievement.artifactUrl || (materialUrl ? String(materialUrl).trim() : null);
       const draftEv = { id: achievement.id || 'ev_legacy_' + (djb2(text + '|' + achievement.type) >>> 0).toString(36),
-        title: achievement.title || '成果 ' + (index + 1), description: achievement.desc || '', type: achievement.type,
+        title: achievement.title || '成果 ' + (index + 1), description: [achievement.role ? '角色：' + achievement.role : '', achievement.desc || ''].filter(Boolean).join(' · '), type: achievement.type,
         courseId: resolveCourseId(achievement.title, major), skillIds: [...new Set(extractSkillsFromText(text).map(s => s.skillId))],
         verificationStatus: achievement.verificationStatus || 'unverified', observedAt: achievement.observedAt || null,
-        artifactUrl: achievement.artifactUrl || null, verified: achievement.verificationStatus === 'user_confirmed' || !!achievement.verified,
+        artifactUrl: resolvedUrl, hasPortfolio: !!(resolvedUrl || materials.length),
+        verified: achievement.verificationStatus === 'user_confirmed' || !!achievement.verified,
         metrics: Array.isArray(achievement.metrics) ? achievement.metrics : [] };
       draftEv.type = canonicalEvidenceType(draftEv);
       evidences.push(draftEv);
@@ -3645,56 +3694,502 @@ function getCurriculum(major){
 function allCurriculumCourses(major){
   return getCurriculum(major).groups.flatMap(g=>g.courses.map(c=>Object.assign({cat:g.cat},c)));
 }
-function parsePlanText(text){
-  const known = allCurriculumCourses(state.profile.major);
-  const tokens = String(text).split(/[\n\r;；、,，|]+/).map(s=>s.replace(/[《》<>""\s]/g,'').trim()).filter(Boolean);
+function courseKey(name){ return String(name||'').normalize('NFKC').trim().toLowerCase().replace(/\s+/g,''); }
+function courseOrigin(c){
+  if(!c.source && !c.school && !c.major && !c.version) return '';
+  return [c.school || '学校未填', c.major || '专业未填', c.version || '版本未填', c.source || '来源未记录'].join(' · ');
+}
+function displayStatus(status){ return status === '已通过' ? '已修' : status; }
+function parsePlanText(text, major = state.profile.major){
+  const known = allCurriculumCourses(major);
+  const rawStr = String(text || '').trim();
+  if(!rawStr) return [];
+  const lines = rawStr.split(/\r?\n/);
+  const splitCells = line => line.split(/[,，;；、|\t]/).map(v => v.trim().replace(/^"(.*)"$/,'$1').replace(/^[《<](.+)[》>]$/,'$1').trim());
+  const headings = splitCells(lines[0]);
+  const nameColumn = headings.findIndex(v => ['课程','课程名','课程名称'].includes(v));
+  const tokens = nameColumn >= 0
+    ? lines.slice(1).map(line => splitCells(line)[nameColumn]).filter(Boolean)
+    : rawStr.split(/[\n\r;；、,，|\t]+/).map(s => s.replace(/^"(.*)"$/,'$1').replace(/[《》<>""]/g,'').trim()).filter(Boolean);
   const seen = new Set(), out = [];
-  tokens.forEach(t=>{
-    if(t.length<2||t.length>24) return;
-    const hit = known.find(k=>k.n===t||t.includes(k.n)||k.n.includes(t));
-    const name = hit?hit.n:t;
-    if(seen.has(name)) return;
-    const looksCourse = hit||/[学论础析原理计语文化史法经管营销材料物理实验设计写作]/.test(t);
-    if(!looksCourse) return;
-    seen.add(name);
-    out.push(hit?{n:hit.n,cat:hit.cat,cr:hit.cr,tm:hit.tm,conf:'hi'}:{n:name,cat:'识别课程',cr:null,tm:null,conf:'mid'});
-  });
+  for(const t of tokens){
+    if(!t || t.length < 2 || t.length > 64 || !/[^\d\s.\-/:()]/.test(t) || /^https?:\/\//i.test(t)) continue;
+    const exactHit = known.find(k => courseKey(k.n) === courseKey(t));
+    const fuzzyHit = exactHit || (t.length <= 24 ? known.find(k => k.n === t || t.includes(k.n) || k.n.includes(t)) : null);
+    const hit = exactHit || fuzzyHit;
+    const name = exactHit ? exactHit.n : (nameColumn >= 0 ? t : (hit ? hit.n : t));
+    const key = courseKey(name);
+    if(seen.has(key)) continue;
+    const looksCourse = nameColumn >= 0 || hit || /[学论础析原理计语文化史法经管营销材料物理实验设计写作编程导论系统工程网络算法结构电路控制信号机器智能数据开发测试英语体育思政马克思心理]/.test(t) || (lines.length >= 2 && t.length <= 28);
+    if(!looksCourse) continue;
+    seen.add(key);
+    out.push(hit
+      ? {n: name, cat: hit.cat, cr: hit.cr, tm: hit.tm, conf: 'hi'}
+      : {n: name, cat: '待核对课程', cr: null, tm: null, conf: 'mid'});
+  }
   return out;
 }
 
-/* ================= 状态 ================= */
+/* ================= 状态与本机加密保险箱 ================= */
 const LS_KEY = 'course-compass-v1';
+const GRADES = ['大一','大二','大三','大四'];
+const INTERN_WINDOWS = ['未确定','寒假','暑假','寒暑假均可'];
 function freshState(){
   return {
     module:'dash',
+    confirmed:null, priorVersions:[],
     profile:{school:'',major:'',grade:'大三',rank:null,rankTotal:null,gpa:null,weeklyHours:8,intern:'未确定',courses:[],achievements:[],saved:false},
     paths:[], profilePage:0, diagIndex:0,
     lanes:['baoyan','kaoyan','liuxue','jiuye'],
     calcA:'baoyan',calcB:'kaoyan',
     radarDismissed:[],radarRead:false,weeklyDone:{},dashFilter:'all',
-    evScenario:0,evEngine:'rule',evResult:null,evBusy:false,
-    courseMode:'recommend',recSel:[],upSel:[],uploadResult:null,uploadBusy:false,
+    evScenario:0,evEngine:'rule',evResult:null,evBusy:false,evTarget:null,evText:null,
+    courseMode:'recommend',courseReview:null,recSel:[],upSel:[],uploadResult:null,uploadBusy:false,
     intel:{cat:'all',path:'all',lv:'all',q:'',sort:'score',savedOnly:false},
     intelRead:[],intelDismissed:[],intelSaved:[],intelExpanded:null,intelUndo:null,
     jobs:{targetReqIds:[],routeFocusSkill:null,q:'',filters:{kind:'all',category:'all',city:'all',exp:'all',tier:'all',industry:'all',degree:'all',companyType:'all',salary:'all',company:'all',eligibility:'all',status:'current',source:'all',graduation:'all',direction:'all',family:'all',remote:'all',freshness:'all'},sort:'match',viewMode:'home',openJobId:null,history:[],updateHash:null,updateInfo:null,personaId:null,detailTab:'analysis',limit:24,compareIds:[],savedIds:[],dismissedIds:[],applications:{},importedJobs:[],liveJobs:[],postmortems:[],personalized:true,preferences:{primaryDirectionId:null,secondaryDirectionIds:[],excludedDirectionIds:[],cities:[],jobTypes:[],salaryMin:null}}
   };
 }
+function profileNumber(field, raw){
+  if(raw == null || String(raw).trim() === '') return null;
+  const n = Number(raw);
+  if(field === 'gpa') return Number.isFinite(n) && n >= 0 && n <= 100 ? n : NaN;
+  return Number.isSafeInteger(n) && n > 0 ? n : NaN;
+}
+function newAchievementId(){
+  if(globalThis.crypto?.getRandomValues){
+    const bytes = crypto.getRandomValues(new Uint8Array(8));
+    return 'CG-'+Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  return 'CG-'+Date.now().toString(16)+Math.random().toString(16).slice(2,10);
+}
+function prepareAchievements(records){
+  const list = Array.isArray(records) ? records : [];
+  const seen = new Set();
+  for(const item of list){
+    if(!item || typeof item !== 'object') continue;
+    if(!item.id || seen.has(item.id)) item.id = newAchievementId();
+    seen.add(item.id);
+    item.role ??= '';
+    item.materials = Array.isArray(item.materials) ? item.materials : [];
+  }
+  return list;
+}
+function normalizeProfile(stored, allowEmptyGrade = false){
+  const base = freshState().profile;
+  const p = Object.assign(base, stored || {});
+  for(const key of ['school','major']) p[key] = String(p[key] ?? '').trim();
+  if(!GRADES.includes(p.grade)) p.grade = allowEmptyGrade ? '' : '大三';
+  for(const key of ['gpa','rank','rankTotal']){
+    const n = profileNumber(key, p[key]);
+    p[key] = Number.isNaN(n) ? null : n;
+  }
+  if(p.rankTotal !== null && p.rank !== null && p.rank > p.rankTotal) p.rank = null;
+  p.weeklyHours = Number(p.weeklyHours);
+  if(!Number.isInteger(p.weeklyHours) || p.weeklyHours < 0 || p.weeklyHours > 40) p.weeklyHours = 8;
+  if(!INTERN_WINDOWS.includes(p.intern)) p.intern = '未确定';
+  p.courses = Array.isArray(p.courses) ? p.courses : [];
+  p.achievements = prepareAchievements(p.achievements);
+  return p;
+}
+function hydrateFullState(rawObj, isAccountMode = false){
+  const base = freshState();
+  if(!rawObj || typeof rawObj !== 'object'){
+    if(isAccountMode) base.profile.grade = '';
+    return base;
+  }
+  const savedJobs = rawObj.jobs || {};
+  const next = {
+    ...base,
+    ...rawObj,
+    jobs: {
+      ...base.jobs,
+      ...savedJobs,
+      importedJobs: [],
+      filters: {...base.jobs.filters, ...(savedJobs.filters || {})},
+      preferences: {...base.jobs.preferences, ...(savedJobs.preferences || {})},
+    },
+  };
+  const previousTier = {sprint:'priority', evidence_gap:'worth', gate_blocked:'challenge'};
+  if(savedJobs.filters?.bucket && next.jobs.filters.tier === 'all') next.jobs.filters.tier = previousTier[savedJobs.filters.bucket] || 'all';
+  delete next.jobs.filters.bucket;
+  next.profile = normalizeProfile(next.profile, isAccountMode);
+  next.priorVersions = Array.isArray(next.priorVersions) ? next.priorVersions : [];
+  next.confirmed = next.confirmed && typeof next.confirmed === 'object' ? next.confirmed : null;
+  next.evBusy = false;
+  next.evResult = null;
+  next.uploadBusy = false;
+  if(!next.uploadResult?.courses) { next.uploadResult = null; next.upSel = []; }
+  return next;
+}
 let state = freshState();
 const ccPracticeFolders=new Map();
 try{
   const raw = localStorage.getItem(LS_KEY);
-  if(raw){
-    const s=JSON.parse(raw), base=freshState(), savedJobs=s.jobs||{};
-    state={...base,...s,jobs:{...base.jobs,...savedJobs,importedJobs:[],filters:{...base.jobs.filters,...savedJobs.filters},preferences:{...base.jobs.preferences,...savedJobs.preferences}}};
-    const previousTier={sprint:'priority',evidence_gap:'worth',gate_blocked:'challenge'};
-    if(savedJobs.filters?.bucket && state.jobs.filters.tier==='all') state.jobs.filters.tier=previousTier[savedJobs.filters.bucket]||'all';
-    delete state.jobs.filters.bucket;
-    state.evBusy=false; state.evResult=null;
-  }
+  if(raw) state = hydrateFullState(JSON.parse(raw), false);
 }catch(e){}
 state.jobs.importedJobs=[];
 window.CC.setImportedJobs([]);
-function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+
+const ccVault = (() => {
+  const sessionKey = 'cc.session';
+  let account = null, cryptoKey = null, writing = null, dirty = null, lastSaved = null;
+  let writeError = false, busy = false;
+  const dialog = () => document.querySelector('#account-dialog');
+  const note = msg => { const el = document.querySelector('#account-note'); if(el) el.textContent = msg; };
+  const storageKey = () => 'cc.profile.' + account.id;
+  const encode = bytes => {
+    let text = '';
+    for(let i = 0; i < bytes.length; i += 16384) text += String.fromCharCode(...bytes.subarray(i, i + 16384));
+    return btoa(text);
+  };
+  const decode = text => Uint8Array.from(atob(text), c => c.charCodeAt(0));
+  function isLoopbackPage(){
+    return /^https?:$/.test(location.protocol) && ['127.0.0.1','localhost','[::1]'].includes(location.hostname);
+  }
+  async function api(route, body){
+    const headers = {Authorization: 'Bearer ' + (sessionStorage.getItem(sessionKey) || '')};
+    const options = {headers, cache: 'no-store'};
+    if(body !== undefined){
+      options.method = 'POST';
+      headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+    const response = await fetch('/api/' + route, options);
+    const result = await response.json().catch(() => ({}));
+    if(!response.ok){
+      const e = new Error(result.error || '请求失败');
+      e.status = response.status;
+      throw e;
+    }
+    return result;
+  }
+  function setError(value){
+    writeError = value;
+    const banner = document.querySelector('#vault-error');
+    if(banner) banner.hidden = !value;
+  }
+  function syncAccountChrome(){
+    const openBtn = document.querySelector('#account-open-btn');
+    const activeBox = document.querySelector('#account-active-box');
+    const label = document.querySelector('#account-label');
+    const resetBtn = document.querySelector('#reset-demo-btn');
+    if(openBtn) openBtn.hidden = Boolean(account);
+    if(activeBox) activeBox.hidden = !account;
+    if(label) label.textContent = account ? '🔒 当前账号 · ' + account.name : '';
+    if(resetBtn) resetBtn.hidden = Boolean(account);
+  }
+  function lock(message){
+    sessionStorage.removeItem(sessionKey);
+    account = null;
+    cryptoKey = null;
+    dirty = null;
+    if(message) sessionStorage.setItem('cc.notice', message);
+    location.reload();
+  }
+  async function verify(){
+    if(!account) return;
+    try{
+      const current = await api('session');
+      if(current.id !== account.id || current.generation !== account.generation){
+        lock('档案已发生变化，请重新登录。');
+        throw new Error('会话已变更。');
+      }
+    }catch(e){
+      if(e.status === 401) lock('登录已过期，请重新登录。');
+      throw e;
+    }
+  }
+  async function writePending(){
+    while(dirty !== null && account && cryptoKey){
+      const text = dirty;
+      dirty = null;
+      try{
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const encrypted = await crypto.subtle.encrypt({name:'AES-GCM', iv}, cryptoKey, new TextEncoder().encode(text));
+        localStorage.setItem(storageKey(), JSON.stringify({
+          generation: account.generation,
+          iv: encode(iv),
+          data: encode(new Uint8Array(encrypted)),
+        }));
+        lastSaved = text;
+        setError(false);
+      }catch{
+        if(dirty === null) dirty = text;
+        setError(true);
+        break;
+      }
+    }
+  }
+  function persist(){
+    if(!account || !cryptoKey){
+      try{
+        localStorage.setItem(LS_KEY, JSON.stringify(state));
+        setError(false);
+        return true;
+      }catch{
+        setError(true);
+        return false;
+      }
+    }
+    const text = JSON.stringify(state);
+    if(text === lastSaved && !writing && dirty === null) return true;
+    dirty = text;
+    if(!writing) writing = writePending().finally(() => { writing = null; });
+    return !writeError;
+  }
+  async function flush(){
+    persist();
+    if(writing) await writing;
+    if(writeError || dirty !== null) throw new Error('未能保存到本机。请检查浏览器存储空间后重试。');
+  }
+  async function openAccount(){
+    const info = await api('session');
+    return new Promise((resolve, reject) => {
+      const enterAccount = async lease => {
+        if(lease === null){
+          reject(new Error('该账号已在本浏览器另一个标签页打开。请关闭该页后再试。'));
+          return;
+        }
+        try{
+          const rawBytes = Uint8Array.from(info.key.match(/../g), b => parseInt(b, 16));
+          const localKey = await crypto.subtle.importKey('raw', rawBytes, 'AES-GCM', false, ['encrypt','decrypt']);
+          const raw = localStorage.getItem('cc.profile.' + info.id);
+          let stored = null;
+          if(raw){
+            const envelope = JSON.parse(raw);
+            if(envelope.generation === info.generation){
+              const bytes = await crypto.subtle.decrypt({name:'AES-GCM', iv:decode(envelope.iv)}, localKey, decode(envelope.data));
+              stored = JSON.parse(new TextDecoder().decode(bytes));
+            }else{
+              localStorage.removeItem('cc.profile.' + info.id);
+            }
+          }
+          state = hydrateFullState(stored, true);
+          window.CC.setImportedJobs([]);
+          account = info;
+          cryptoKey = localKey;
+          lastSaved = stored ? JSON.stringify(state) : null;
+          syncAccountChrome();
+          if(dialog()?.open) dialog().close();
+          const deleted = sessionStorage.getItem('cc.deleted') === info.id;
+          sessionStorage.removeItem('cc.deleted');
+          if(deleted){ state.module = 'profile'; state.profilePage = 3; }
+          render();
+          if(deleted) toast('档案已清空。你仍登录在原账号，可以重新建档。');
+          setTimeout(() => lock('登录已过期，请重新登录。'), Math.max(0, info.expiry * 1000 - Date.now()));
+          resolve();
+          if(lease) await new Promise(() => {});
+        }catch(e){ reject(e); }
+      };
+      if(navigator.locks?.request){
+        navigator.locks.request('cc.edit.' + info.id, {ifAvailable: true}, enterAccount).catch(reject);
+      }else{
+        void enterAccount(undefined);
+      }
+    });
+  }
+  async function action(fn, {saveFirst = true, checkSession = true} = {}){
+    if(!account){
+      try{ await fn(); }catch(e){ toast(e.message || '操作失败', 'warn'); }
+      return;
+    }
+    if(busy) return;
+    busy = true;
+    const app = document.querySelector('#app');
+    if(app) app.inert = true;
+    try{
+      if(saveFirst) await flush(); else if(writing) await writing;
+      if(checkSession) await verify();
+      await fn();
+    }catch(e){
+      toast(e.message || '操作失败', 'warn');
+    }finally{
+      busy = false;
+      if(app) app.inert = false;
+    }
+  }
+  function openModal(){
+    const dlg = dialog();
+    if(!dlg) return;
+    const form = document.querySelector('#account-form');
+    if(!isLoopbackPage()){
+      if(form) form.hidden = true;
+      note('本机加密账号服务仅在本机运行（node _serve.mjs / start.bat，访问 http://127.0.0.1:8090/）时可用；静态网页模式默认保存在当前浏览器。');
+    }else if(!crypto?.subtle){
+      if(form) form.hidden = true;
+      note('请通过 127.0.0.1 或 localhost 使用支持 Web Crypto 安全存储的现代浏览器。');
+    }else{
+      if(form) form.hidden = false;
+      note(sessionStorage.getItem('cc.notice') || '使用本机账号在当前浏览器加密隔离保存档案（共用设备用完请退出）。');
+      sessionStorage.removeItem('cc.notice');
+    }
+    if(!dlg.open) dlg.showModal();
+  }
+  function init(){
+    syncAccountChrome();
+    const form = document.querySelector('#account-form');
+    if(form){
+      form.onsubmit = async event => {
+        event.preventDefault();
+        if(form.inert) return;
+        form.inert = true;
+        try{
+          const mode = event.submitter?.value === 'register' ? 'register' : 'login';
+          const result = await api(mode, {
+            name: form.elements.username.value,
+            password: form.elements.password.value,
+          });
+          form.elements.password.value = '';
+          sessionStorage.setItem(sessionKey, result.token);
+          await openAccount();
+          toast(mode === 'register' ? '已创建并登录本机加密账号：' + account.name : '已登录本机加密账号：' + account.name);
+        }catch(e){
+          note(e.message);
+        }finally{
+          form.inert = false;
+        }
+      };
+    }
+    const noticeMsg = sessionStorage.getItem('cc.notice');
+    if(noticeMsg && isLoopbackPage()){
+      openModal();
+    }else if(sessionStorage.getItem(sessionKey) && isLoopbackPage() && crypto?.subtle){
+      void openAccount().catch(e => {
+        if(e.status === 401) sessionStorage.removeItem(sessionKey);
+        toast(e.message || '本机账号会话恢复失败', 'warn');
+      });
+    }
+  }
+  window.addEventListener('beforeunload', e => { if(writing || dirty !== null){ e.preventDefault(); e.returnValue = ''; } });
+  window.addEventListener('pageshow', e => { if(e.persisted && account) location.reload(); });
+  document.addEventListener('visibilitychange', () => { if(account && !document.hidden) verify().catch(e => toast(e.message, 'warn')); });
+  return {
+    init, openModal, persist, flush, action,
+    isAuthenticated: () => Boolean(account),
+    name: () => account?.name || null,
+    logout: () => action(async () => {
+      if(writeError && !confirm('最近的修改未保存。仍要退出账号吗？')) return;
+      try{ await api('logout', {}); }finally{ dirty = null; lock(); }
+    }, {saveFirst: false, checkSession: false}),
+    erase: () => {
+      if(!account){
+        state = freshState();
+        ccResumeDrafts = [];
+        ccPracticeFolders.clear();
+        ccRoadmapReviews.clear();
+        ccGrowthRuns.clear();
+        ccClearProfileCopilotCache();
+        ccJdCopilotRuns.clear();
+        window.CC.setImportedJobs([]);
+        try{ localStorage.removeItem(LS_KEY); }catch{}
+        state.module = 'profile';
+        state.profilePage = 3;
+        render();
+        toast('已清空本机档案与历史确认记录。');
+        return;
+      }
+      void action(async () => {
+        await api('profile/delete', {generation: account.generation});
+        dirty = null;
+        cryptoKey = null;
+        try{ localStorage.removeItem(storageKey()); }finally{
+          sessionStorage.setItem('cc.deleted', account.id);
+          location.reload();
+        }
+      }, {saveFirst: false});
+    },
+  };
+})();
+
+function save(){ return ccVault.persist(); }
+function confirmedVersions(){
+  return state.confirmed ? [...(state.priorVersions || []), state.confirmed] : [];
+}
+function versionLabel(snapshot, index){
+  return `版本 ${index + 1} · ${new Date(snapshot.at).toLocaleString('zh-CN', {hour12: false})}`;
+}
+function profileStatus(){
+  if(!state.confirmed) return '草稿 · 尚未生成确认快照';
+  const snapProfile = JSON.stringify({...state.profile, saved: true});
+  const confProfile = JSON.stringify({...state.confirmed.profile, saved: true});
+  return snapProfile === confProfile ? '已确认 · 当前内容与最新确认版一致' : '草稿有更新 · 点击下方保存可生成新确认版本';
+}
+function recordProfileSnapshot(){
+  const previous = state.confirmed;
+  if(previous){
+    state.priorVersions = Array.isArray(state.priorVersions) ? state.priorVersions : [];
+    state.priorVersions.push(previous);
+  }
+  const cloned = JSON.parse(JSON.stringify(state.profile));
+  cloned.saved = true;
+  state.confirmed = {at: new Date().toISOString(), profile: cloned};
+}
+function profileExport(){
+  const data = {
+    schemaVersion: 2,
+    account: ccVault.name(),
+    exportedAt: new Date().toISOString(),
+    draft: state.profile,
+    confirmed: state.confirmed,
+    confirmationHistory: confirmedVersions(),
+    paths: state.paths,
+    weeklyDone: state.weeklyDone,
+    pendingCourseReview: state.courseReview,
+    evidenceDraft: {achievementId: state.evTarget, text: state.evText},
+    feedback: {
+      read: state.intelRead,
+      saved: state.intelSaved,
+      dismissed: state.intelDismissed,
+      radarRead: state.radarRead,
+      radarDismissed: state.radarDismissed,
+    },
+  };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = '大学航线-本人档案-' + fmtDate(new Date()) + '.json';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function showHistory(){
+  const versions = confirmedVersions();
+  const picker = $('#history-version');
+  if(!picker) return;
+  picker.replaceChildren();
+  versions.forEach((snapshot, i) => picker.prepend(new Option(versionLabel(snapshot, i) + (i === versions.length - 1 ? '（当前确认版）' : ''), String(i))));
+  if(picker.parentElement) picker.parentElement.hidden = !versions.length;
+  if(versions.length) picker.value = String(versions.length - 1);
+  showHistoryVersion();
+  $('#profile-history')?.showModal();
+}
+function showHistoryVersion(){
+  const versions = confirmedVersions();
+  const picker = $('#history-version');
+  const i = Number(picker?.value ?? -1);
+  const selected = versions[i];
+  const target = $('#confirmed-view');
+  if(!target) return;
+  if(!selected){
+    target.textContent = '暂无确认记录。完成「时间与确认」保存档案后，每次确认的历史版本都会显示在这里。';
+    return;
+  }
+  const p = selected.profile || {};
+  const courses = Array.isArray(p.courses) ? p.courses : [];
+  const achievements = Array.isArray(p.achievements) ? p.achievements : [];
+  target.innerHTML = `<h3>${esc(versionLabel(selected, i))}</h3>
+    <p>${esc(p.school || '学校未填')} · ${esc(p.major || '专业未填')} · ${esc(p.grade || '年级未填')}<br>
+    均分 ${p.gpa ?? '未填'} · 名次 ${p.rank ?? '未填'} / ${p.rankTotal ?? '未填'}<br>
+    每周 ${p.weeklyHours ?? 8} 小时 · 实习窗口：${esc(p.intern || '未确定')}</p>
+    <b>课程（${courses.length}）</b><ul>${courses.map(c => {
+      const orig = courseOrigin(c);
+      return `<li>${esc(c.name)} · ${esc(displayStatus(c.status))}${orig ? ' · ' + esc(orig) : ''}</li>`;
+    }).join('')}</ul>
+    <b>成果（${achievements.length}）</b><ul>${achievements.map(a => {
+      const mats = Array.isArray(a.materials) ? a.materials : [];
+      return `<li>${esc(a.title)}${a.id ? ' · ' + esc(a.id) : ''} · ${esc(a.type || '成果')}<br>${esc(a.desc || '')}${a.role ? ' · 角色：' + esc(a.role) : ''}${mats.length ? ' · ' + mats.map(esc).join(' · ') : ''}</li>`;
+    }).join('')}</ul>`;
+}
 const $ = s=>document.querySelector(s);
 const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const TODAY = new Date();
@@ -4001,14 +4496,17 @@ function ccClearProfileCopilotCache(){
 function applyPersona(pid){
   const per=window.CC.DATA.personas.find(x=>x.id===pid); if(!per) return;
   ccResumeDrafts=[];
+  state.courseReview=null;
+  state.evTarget=null;
+  state.evText=null;
   ccClearProfileCopilotCache();
   ccJdCopilotRuns.clear();
   state.jobs.personaId=pid;
   state.profile={school:per.schoolLabel||per.school||'',major:CC_MAJOR_LABEL[per.major]||per.major,grade:CC_GRADE_LABEL[per.grade]||'大三',
     rank:per.rank?per.rank.position:null,rankTotal:per.rank?per.rank.total:null,gpa:per.gpaPercent,weeklyHours:per.weeklyHours||8,intern:per.intern||'未确定',
     graduationDate:per.graduationYear+'-06',graduationDateSource:'demo',degree:'bachelor',evidences:JSON.parse(JSON.stringify(per.evidences)),isStudentCadre:!!per.isStudentCadre,
-    courses:per.completedCourseIds.map(id=>({id,name:window.CC.courseName(id),status:'已通过'})),
-    achievements:per.evidences.map(e=>({id:e.id,type:window.CC.canonicalEvidenceType(e),title:e.title,desc:e.description})),saved:true};
+    courses:per.completedCourseIds.map(id=>({id,name:window.CC.courseName(id),status:'已通过',source:'典型画像'})),
+    achievements:prepareAchievements(per.evidences.map(e=>({id:e.id,type:window.CC.canonicalEvidenceType(e),title:e.title,desc:e.description,role:'',materials:e.artifactUrl?[e.artifactUrl]:[]}))),saved:true};
   state.paths=[...new Set((per.intendedPaths||[]).map(k=>CC_REV_PATH[k]).filter(Boolean))];
   state.jobs.targetReqIds=(per.targetJobIds||[]).slice();
   if(pid==='p_cs'){
@@ -7569,39 +8067,45 @@ function renderDash(){
 
 /* ================= 模块：建立档案 ================= */
 const PROFILE_PAGES = ['基本信息','已修课程','已有成果','时间与确认'];
+function rankPreview(p){
+  const r = pct(p);
+  if(r === null) return '填写排名与总人数后，这里实时换算百分比';
+  return `当前排名：前 ${Number((r*100).toFixed(1))}%${r<=0.3?' · 已达多数夏令营门槛（前 30%）':' · 距夏令营常见门槛（前 30%）还有空间'}`;
+}
 function renderProfile(){
   const p = state.profile, pg = state.profilePage;
+  prepareAchievements(p.achievements);
   let body = '';
   if(pg===0){
-    const r = pct(p);
-    body = `<div class="card">
+    body = `<div class="card" id="basic-profile">
       <div class="label">第 1 页 · 只建立事实，不急着推荐</div>
       <div class="form-grid">
-        <div class="field"><label>学校 <small>必填</small></label><input data-field="school" value="${esc(p.school)}" placeholder="如：临江大学"></div>
-        <div class="field"><label>专业 <small>必填</small></label><input data-field="major" value="${esc(p.major)}" placeholder="如：汉语言文学"></div>
-        <div class="field"><label>年级</label><select data-field="grade">${['大一','大二','大三','大四'].map(g=>`<option ${p.grade===g?'selected':''}>${g}</option>`).join('')}</select><span class="hint">按年级推算为 ${tlGradYear()} 届，关键日期时间线自动平移</span></div>
+        <div class="field"><label for="basic-school">学校 <small>必填</small></label><input id="basic-school" data-field="school" value="${esc(p.school)}" placeholder="如：临江大学"></div>
+        <div class="field"><label for="basic-major">专业 <small>必填</small></label><input id="basic-major" data-field="major" value="${esc(p.major)}" placeholder="如：汉语言文学"></div>
+        <div class="field"><label for="basic-grade">年级</label><select id="basic-grade" data-field="grade"><option value="" ${!p.grade?'selected':''}>未填写</option>${GRADES.map(g=>`<option ${p.grade===g?'selected':''}>${g}</option>`).join('')}</select><span class="hint">按年级推算为 ${tlGradYear()} 届，关键日期时间线自动平移</span></div>
         <div class="field"><label for="cc-profile-graduation">预计毕业年月 <small>可留空</small></label><input id="cc-profile-graduation" type="month" data-field="graduationDate" value="${esc(p.graduationDate||'')}"><span class="hint">用于核对岗位届别。留空则显示待核验。</span></div>
         <div class="field"><label for="cc-profile-degree">预计取得学历 <small>可留空</small></label><select id="cc-profile-degree" data-field="degree"><option value="">待确认</option>${Object.entries(window.CC.DEGREE_LABEL).map(([id,label])=>`<option value="${id}" ${p.degree===id?'selected':''}>${label}</option>`).join('')}</select></div>
-        <div class="field"><label>均分 <small>百分制，可留空</small></label><input type="number" min="0" max="100" data-field="gpa" value="${p.gpa??''}" placeholder="如：82"></div>
-        <div class="field"><label>专业排名 <small>可留空</small></label><input type="number" min="1" data-field="rank" value="${p.rank??''}" placeholder="如：18"></div>
-        <div class="field"><label>专业总人数 <small>可留空</small></label><input type="number" min="1" data-field="rankTotal" value="${p.rankTotal??''}" placeholder="如：120"></div>
+        ${[['gpa','均分','百分制，可留空','min="0" max="100" step="any"','82'],['rank','专业排名','可留空','min="1" step="1"','18'],['rankTotal','专业总人数','可留空','min="1" step="1"','120']].map(([key,label,sub,limits,example])=>`
+          <div class="field"><label for="basic-${key}">${label} <small>${sub}</small></label><input id="basic-${key}" type="number" ${limits} data-field="${key}" value="${p[key]??''}" placeholder="如：${example}" aria-describedby="error-${key}"><span class="field-error" id="error-${key}" aria-live="polite"></span></div>`).join('')}
       </div>
-      <div class="pct-preview" id="pct-preview">${r!=null?`当前排名：前 ${(r*100).toFixed(1)}%${r<=0.3?' · 已达多数夏令营门槛（前 30%）':' · 距夏令营常见门槛（前 30%）还有空间'}`:'填写排名与总人数后，这里实时换算百分比'}</div>
+      <div class="pct-preview" id="pct-preview" aria-live="polite">${rankPreview(p)}</div>
+      <p id="basic-storage-error" class="field-error" role="status" hidden>浏览器未能保存档案。刷新后本次修改可能丢失。</p>
       <div class="boundary"><b>边界：</b>已修过一门课不等于已证明掌握相关技能；课程记录和成果证据分开记。姓名、身份证、手机号一律不收。</div>
     </div>`;
   }else if(pg===1){
     const mode = state.courseMode;
     body = `<div class="card">
       <div class="label">第 2 页 · 已修 / 在修课程</div>
+      ${state.courseReview ? renderCourseReview() : `
       <div class="seg" role="tablist">
         <button class="${mode==='upload'?'on':''}" data-action="course-mode" data-mode="upload">📄 上传培养方案</button>
         <button class="${mode==='recommend'?'on':''}" data-action="course-mode" data-mode="recommend">🎓 按专业推荐</button>
         <button class="${mode==='manual'?'on':''}" data-action="course-mode" data-mode="manual">✍️ 手动添加</button>
       </div>
-      ${mode==='upload'?renderUploadPanel():mode==='recommend'?renderRecommendPanel(p):renderManualPanel()}
-      <div class="label" style="margin:20px 0 10px">已添加课程 · ${p.courses.length} 门</div>
+      ${mode==='upload'?renderUploadPanel():mode==='recommend'?renderRecommendPanel(p):renderManualPanel()}`}
+      <div class="label" style="margin:20px 0 10px">已确认的修读记录 · ${p.courses.length} 门</div>
       ${courseListHTML(p)}
-      <div class="boundary"><b>边界：</b>课程信息全部由你主动提供或勾选确认，不爬取教务系统；上传解析与公开推荐都只是候选，导入结果由你本人核对。</div>
+      <div class="boundary"><b>边界：</b>课程信息全部由你主动提供或勾选确认，不爬取教务系统；支持课程来源记录与重复导入逐门核对。</div>
     </div>`;
   }else if(pg===2){
     const CC=window.CC;
@@ -7610,74 +8114,133 @@ function renderProfile(){
       <div class="add-row">
         <select id="ach-type" aria-label="成果类型"><option>实习实践</option><option>科研</option><option>项目</option><option>竞赛</option><option>课程作业</option><option>其他</option></select>
         <input id="ach-input" placeholder="成果名称，如：姜歌机器人 SLAM 导航算法实习 / ROBOCON 国家二等奖" aria-label="成果名称">
-        <button class="btn primary" data-action="ach-add">＋ 添加</button>
       </div>
+      <div class="field" style="margin-bottom:12px"><label for="ach-desc">成果简介 <small>选填</small></label><textarea id="ach-desc" rows="2" placeholder="例如：小组为校内二手交易平台设计了商品检索与缓存模块。"></textarea></div>
+      <div class="add-row" style="margin-top:0"><button class="btn primary" data-action="ach-add">＋ 保存成果</button></div>
       ${p.achievements.length?p.achievements.map((a,i)=>{
         const verified=a.verificationStatus==='user_confirmed'||a.verificationStatus==='system_verified'||a.verificationStatus==='reviewer_verified'||!!a.verified;
-        const sks=CC?[...new Set(CC.extractSkillsFromText((a.title||'')+' '+(a.desc||'')).map(s=>s.skillId))].slice(0,5):[];
+        const mats=Array.isArray(a.materials)?a.materials:[];
+        const linkUrl=a.artifactUrl||mats.find(m=>/^https?:\/\//i.test(String(m).trim()))||null;
+        const sks=CC?[...new Set(CC.extractSkillsFromText([a.title,a.desc,a.role,a.originalText,...(a.suggestedSkills||[])].filter(Boolean).join(' ')).map(s=>s.skillId))].slice(0,5):[];
         return `<div class="list-row" style="align-items:flex-start">
         <div class="lr-main">
-          <div class="lr-title">${esc(ccStripMd(a.title))} ${verified?'<span class="tag" style="font-size:10.5px;margin-left:4px">✓ 已核验</span>':'<span class="tag warn" style="font-size:10.5px;margin-left:4px">待核验</span>'}</div>
+          <div class="lr-title">${esc(ccStripMd(a.title))} <span class="tag blue" style="font-size:10px;margin-left:4px">${esc(a.id)}</span> ${verified?'<span class="tag" style="font-size:10.5px;margin-left:4px">✓ 已核验</span>':'<span class="tag warn" style="font-size:10.5px;margin-left:4px">待核验</span>'}</div>
           <div class="lr-sub">${esc(a.type)}${a.desc?' · '+esc(ccStripMd(a.desc).slice(0,110))+(a.desc.length>110?'…':''):''}</div>
-          ${sks.length||a.artifactUrl?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">${sks.map(sid=>`<span class="pill" style="font-size:10.5px;padding:1px 6px">${esc(CC.skillName(sid))}</span>`).join('')}${a.artifactUrl?`<a class="tag blue" style="font-size:10.5px;text-decoration:none" href="${esc(a.artifactUrl)}" target="_blank" rel="noopener noreferrer">🔗 作品链接 ↗</a>`:''}</div>`:''}
+          <div class="lr-sub">${a.role?'个人角色：'+esc(a.role)+' · ':''}材料 ${mats.length} 项</div>
+          ${sks.length||linkUrl?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">${sks.map(sid=>`<span class="pill" style="font-size:10.5px;padding:1px 6px">${esc(CC.skillName(sid))}</span>`).join('')}${linkUrl?`<a class="tag blue" style="font-size:10.5px;text-decoration:none" href="${esc(linkUrl)}" target="_blank" rel="noopener noreferrer">🔗 作品链接 ↗</a>`:''}</div>`:''}
         </div>
-        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+          <button class="btn small" style="padding:4px 8px;min-height:28px;font-size:11.5px" data-action="ach-evidence" data-id="${esc(a.id)}">补充角色与材料</button>
           <button class="btn small" style="padding:4px 8px;min-height:28px;font-size:11.5px" data-action="ach-verify" data-i="${i}">${verified?'取消核验':'确认属实 ✓'}</button>
-          <button class="lr-del" data-action="ach-del" data-i="${i}" aria-label="删除">✕</button>
+          <button class="lr-del" data-action="ach-del" data-id="${esc(a.id)}" data-i="${i}" aria-label="删除${esc(a.title)}">✕</button>
         </div>
       </div>`;
-      }).join(''):'<div class="empty" style="padding:26px"><h3>还没有成果记录</h3><p>支持直接点上方「一键导入整份简历」自动提取全部实习/论文/项目/竞赛，或在此手动添加。</p></div>'}
-      <div class="boundary"><b>边界：</b>实习、科研论文、自研项目与竞赛经你点击「确认属实 ✓」或附作品链接后，立即计入「已实证技能」大幅提升匹配精度；严禁虚构未做过的经历。</div>
+      }).join(''):'<div class="empty" style="padding:26px"><h3>还没有成果记录</h3><p>支持直接点上方「一键导入整份简历」自动提取全部实习/论文/项目/竞赛，或在此手动添加后关联证据材料。</p></div>'}
+      <div class="boundary"><b>边界：</b>团队项目可点击「补充角色与材料」登记个人分工与佐证链接；经你点击「确认属实 ✓」或附作品链接后，计入「已实证技能」。</div>
     </div>`;
   }else{
+    const versions = confirmedVersions();
     body = `<div class="card">
       <div class="label">第 4 页 · 可投入时间与确认</div>
+      <p id="draft-status" class="muted" style="font-size:13px;font-weight:700;margin-bottom:14px" role="status">${esc(profileStatus())}</p>
       <div class="field full" style="margin-bottom:18px"><label>每周可投入额外时间</label>
-        <div class="range-wrap"><input type="range" min="2" max="40" step="1" data-field="weeklyHours" value="${p.weeklyHours}"><span class="range-val num" id="hours-val">${p.weeklyHours}<small> 小时/周</small></span></div>
+        <div class="range-wrap"><input type="range" aria-label="每周可用时间" min="0" max="40" step="1" data-field="weeklyHours" value="${p.weeklyHours}"><span class="range-val num" id="hours-val">${p.weeklyHours}<small> 小时/周</small></span></div>
         <span class="hint">用于后续项目任务的时间校验——推荐必须本学期能执行，而不只是看起来相关。</span>
       </div>
       <div class="field" style="max-width:340px;margin-bottom:18px"><label>可实习时间</label>
-        <select data-field="intern">${['未确定','寒假','暑假','寒暑假均可'].map(x=>`<option ${p.intern===x?'selected':''}>${x}</option>`).join('')}</select>
+        <select data-field="intern" aria-label="可实习时间">${INTERN_WINDOWS.map(x=>`<option ${p.intern===x?'selected':''}>${x}</option>`).join('')}</select>
       </div>
       <div class="summary-box">
         <b>档案摘要</b><br>
-        ${esc(p.school||'（学校未填）')} · ${esc(p.major||'（专业未填）')} · ${esc(p.grade)}<br>
-        ${p.rank&&p.rankTotal?`排名 ${p.rank}/${p.rankTotal}（前 ${(pct(p)*100).toFixed(1)}%）`:'排名未填'} · ${p.gpa!=null?'均分 '+p.gpa:'均分未填'} · 每周 ${p.weeklyHours} 小时<br>
-        已修课程 ${p.courses.length} 门 · 已有成果 ${p.achievements.length} 段 · 可实习：${esc(p.intern)}
+        ${esc(p.school||'（学校未填）')} · ${esc(p.major||'（专业未填）')} · ${esc(p.grade||'年级未填')}<br>
+        ${p.rank&&p.rankTotal?`排名 ${p.rank}/${p.rankTotal}（前 ${(pct(p)*100).toFixed(1)}%）`:'排名未填'} · ${p.gpa!=null?'均分 '+p.gpa:'均分未填'} · 每周 <span id="draft-hours">${p.weeklyHours}</span> 小时<br>
+        已修课程 ${p.courses.length} 门 · 已有成果 ${p.achievements.length} 段 · 可实习：<span id="draft-intern">${esc(p.intern)}</span>
       </div>
-      <div class="boundary"><b>隐私承诺：</b>档案按本人隔离，不进入共享图谱、不做训练语料；可一键导出或彻底删除。</div>
+      ${state.confirmed?`<p class="muted" style="font-size:12.5px;margin-top:10px">最近确认快照：${esc(versionLabel(state.confirmed, versions.length - 1))}</p>`:''}
+      <div class="boundary"><b>隐私与版本隔离：</b>${ccVault.isAuthenticated()?`当前已登录本机账号 <b>${esc(ccVault.name())}</b>，草稿与全部确认历史均使用 AES-GCM 256 位独立加密保存在此浏览器，共用设备用完请退出。`:'档案保存在本浏览器本地，不进入共享图谱、不做训练语料；本机运行服务时可登录「本机加密账号」实现多人加密隔离。'}支持随时回看历史版本、导出 JSON 或一键清空。</div>
+      <div class="acq-bar">
+        <button class="btn" data-action="profile-export">📥 导出本人档案（JSON）</button>
+        <button class="btn danger-ghost" data-action="profile-delete">🗑️ 删除本人档案</button>
+      </div>
     </div>`;
   }
+  const vCount = confirmedVersions().length;
   return `
   <div class="kicker">Step 01 · 建立个人档案</div>
   <h1 class="page-title">先知道学生的起点，<em>才能谈个性化。</em></h1>
   <p class="page-sub">回答"我在哪所学校、学到哪里、有哪些成果、还能投入多少时间"。本页只建立事实，不急着推荐职业。</p>
   <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
     <button class="btn small primary" data-action="cc-open-resume-import">📄 一键粘贴/上传整份简历自动建档</button>
+    <button class="btn small" data-action="profile-history">📜 查看历史档案（${vCount}）</button>
+    ${ccVault.isAuthenticated()?`<span class="pill" style="margin:0">🔒 已加密绑定：${esc(ccVault.name())}</span>`:`<button class="btn small" data-action="account-open">🔐 本机加密账号</button>`}
     <button class="btn small" data-action="demo-fill">⚡ 一键填入演示档案</button>
-    <span class="muted" style="font-size:12px;align-self:center">已有简历？点绿色按钮 10 秒完成学校、专业、届别、实习与项目全量导入</span>
   </div>
   ${body}
   ${pagerHTML(PROFILE_PAGES,pg,'profile-prev',pg===3?'profile-save':'profile-next',pg===3?'保存档案，去选路径 ✓':'下一步 →')}`;
 }
+function syncBasicProfile(focusError=false){
+  const panel = $('#basic-profile');
+  if(!panel) return true;
+  const values = {};
+  const errors = {};
+  for(const input of panel.querySelectorAll('input[type="number"]')){
+    const key = input.dataset.field;
+    values[key] = profileNumber(key, input.value);
+    if(input.validity.badInput || Number.isNaN(values[key])){
+      errors[key] = key === 'gpa' ? '均分须为 0 到 100 之间的数字。' : '请输入大于 0 的整数。';
+    }
+  }
+  if(!errors.rank && !errors.rankTotal && values.rankTotal !== null && values.rank !== null && values.rank > values.rankTotal){
+    errors.rank = `专业排名不能超过专业总人数（${values.rankTotal} 人）。`;
+  }
+  for(const key of Object.keys(values)){
+    const inp = $('#basic-'+key), err = $('#error-'+key);
+    if(inp) inp.setAttribute('aria-invalid', String(Boolean(errors[key])));
+    if(err) err.textContent = errors[key] || '';
+  }
+  const p = state.profile;
+  if($('#basic-school')) p.school = $('#basic-school').value.trim();
+  if($('#basic-major')) p.major = $('#basic-major').value.trim();
+  if($('#basic-grade')) p.grade = $('#basic-grade').value;
+  if($('#cc-profile-graduation')){
+    p.graduationDate = $('#cc-profile-graduation').value;
+    p.graduationDateSource = p.graduationDate ? 'user_confirmed' : null;
+  }
+  if($('#cc-profile-degree')) p.degree = $('#cc-profile-degree').value;
+  if(!errors.gpa && 'gpa' in values) p.gpa = values.gpa;
+  if(!errors.rank && !errors.rankTotal && ('rank' in values || 'rankTotal' in values)){
+    p.rank = values.rank;
+    p.rankTotal = values.rankTotal;
+  }
+  const prevEl = $('#pct-preview');
+  if(prevEl) prevEl.textContent = errors.rank || errors.rankTotal ? '' : rankPreview(p);
+  const stErr = $('#basic-storage-error');
+  if(stErr) stErr.hidden = save();
+  const firstError = Object.keys(errors)[0];
+  if(firstError && focusError) $('#basic-'+firstError)?.focus();
+  return !firstError;
+}
 function updatePctPreview(){
   const el = $('#pct-preview'); if(!el) return;
-  const r = pct(state.profile);
-  el.textContent = r!=null?`当前排名：前 ${(r*100).toFixed(1)}%${r<=0.3?' · 已达多数夏令营门槛（前 30%）':' · 距夏令营常见门槛（前 30%）还有空间'}`:'填写排名与总人数后，这里实时换算百分比';
+  el.textContent = rankPreview(state.profile);
 }
 function courseListHTML(p){
   if(!p.courses.length) return '<div class="empty" style="padding:24px"><h3>还没有课程记录</h3><p>上传培养方案、按专业勾选，或手动添加。未知信息留空不影响后续。</p></div>';
-  return p.courses.map((c,i)=>`<div class="list-row">
-    <div class="lr-main"><div class="lr-title">${esc(c.name)}</div><div class="lr-sub">${esc(c.status)}${c.cr?' · '+c.cr+' 学分':''}${c.tm?' · 第 '+c.tm+' 学期':''}</div></div>
-    <span class="tag ${c.status==='已通过'?'':c.status==='在修'?'blue':'warn'}">${esc(c.status)}</span>
-    <button class="lr-del" data-action="course-del" data-i="${i}" aria-label="删除">✕</button>
-  </div>`).join('');
+  return p.courses.map((c,i)=>{
+    const orig = courseOrigin(c);
+    const disp = displayStatus(c.status);
+    return `<div class="list-row">
+      <div class="lr-main"><div class="lr-title">${esc(c.name)}</div><div class="lr-sub">${esc(orig || disp)}${c.cr?' · '+esc(c.cr)+' 学分':''}${c.tm?' · 第 '+esc(c.tm)+' 学期':''}</div></div>
+      <span class="tag ${disp==='已修'?'':c.status==='在修'?'blue':'warn'}">${esc(disp)}</span>
+      <button class="lr-del" data-action="course-del" ${state.courseReview?'disabled':''} data-i="${i}" aria-label="删除">✕</button>
+    </div>`;
+  }).join('');
 }
 function renderManualPanel(){
   return `<div class="add-row">
     <input id="course-input" placeholder="课程名，如：数据库原理" aria-label="课程名">
-    <select id="course-status" aria-label="修读状态"><option>已通过</option><option>在修</option><option>未通过</option></select>
-    <button class="btn primary" data-action="course-add">＋ 添加</button>
+    <select id="course-status" aria-label="修读状态"><option value="已通过">已修 / 已通过</option><option value="在修">在修</option><option value="未通过">未通过</option></select>
+    <button class="btn primary" data-action="course-add">核对课程 →</button>
   </div>
   <div class="suggest-row">${['数据库原理','统计学','Python 程序设计','市场营销','学术写作','传播学概论'].map(c=>`<button class="sug" data-action="course-suggest" data-name="${c}">＋ ${c}</button>`).join('')}</div>`;
 }
@@ -7691,15 +8254,15 @@ function renderUploadPanel(){
       <input type="file" id="file-input" hidden accept=".pdf,.doc,.docx,.csv,.txt,.md,.png,.jpg,.jpeg">
       <div class="dz-icon">🗂️</div>
       <div class="dz-title">拖入或点击上传培养方案</div>
-      <div class="dz-sub">支持 PDF / Word / CSV / TXT / 图片 · 解析出课程候选后由你勾选确认</div>
+      <div class="dz-sub">支持 PDF / Word / CSV / TXT / Markdown · 解析出课程候选后逐门核对确认</div>
     </div>
-    <div class="or-divider">或粘贴培养方案文本</div>
-    <textarea class="plan-text" id="plan-text" placeholder="把培养方案里的课程列表粘贴进来，如：&#10;数学分析、高等代数、解析几何、常微分方程、概率论…"></textarea>
+    <div class="or-divider">或粘贴培养方案文本 / 表格列</div>
+    <textarea class="plan-text" id="plan-text" placeholder="把培养方案里的课程列表或含「课程名称」表头的 CSV 粘贴进来，如：&#10;数学分析、高等代数、解析几何、常微分方程、概率论…"></textarea>
     <div style="margin-top:10px"><button class="btn" data-action="parse-text">解析文本 →</button></div>
   `}
   ${r?`
     <div class="acq-head">
-      <span class="ah-title">识别结果 · ${esc(r.fileName)}</span>
+      <span class="ah-title">候选课程 · ${esc(r.fileName)}</span>
       <span class="conf hi">高置信</span><span class="conf mid">待核对</span>
       <button class="btn small" data-action="up-all" style="margin-left:auto">全选</button>
       <button class="btn small" data-action="up-clear">清空</button>
@@ -7712,10 +8275,10 @@ function renderUploadPanel(){
     </label>`).join('')}
     <div class="acq-bar">
       <span class="count">已勾选 <b id="up-count">${state.upSel.length}</b> 门</span>
-      <select id="up-status" class="btn small" style="min-height:36px" aria-label="添加为"><option>已通过</option><option>在修</option></select>
-      <button class="btn primary" id="up-add" data-action="up-add" ${state.upSel.length?'':'disabled'}>添加所选 (${state.upSel.length})</button>
+      <select id="up-status" class="btn small" style="min-height:36px" aria-label="添加为"><option value="已通过">已修 / 已通过</option><option value="在修">在修</option></select>
+      <button class="btn primary" id="up-add" data-action="up-add" ${state.upSel.length?'':'disabled'}>核对所选 (${state.upSel.length})</button>
     </div>
-  `:`<p class="acq-note" style="margin-top:12px">上传或粘贴后，这里会列出抽取到的课程候选；勾选你确认修读过的，再批量加入档案。PDF / 图片在纯前端演示中按专业公开方案生成候选，正式产品由 OCR + 模型抽取。</p>`}`;
+  `:`<p class="acq-note" style="margin-top:12px">上传或粘贴后，这里会列出抽取到的课程候选；勾选你确认修读过的，进入来源与重复核对后再写入档案。</p>`}`;
 }
 function renderRecommendPanel(p){
   if(!p.major.trim()){
@@ -7745,8 +8308,8 @@ function renderRecommendPanel(p){
   <div id="rec-groups">${groups}</div>
   <div class="acq-bar">
     <span class="count">已勾选 <b id="rec-count">${state.recSel.length}</b> 门</span>
-    <select id="rec-status" class="btn small" style="min-height:36px" aria-label="添加为"><option>已通过</option><option>在修</option></select>
-    <button class="btn primary" id="rec-add" data-action="rec-add" ${state.recSel.length?'':'disabled'}>添加所选 (${state.recSel.length})</button>
+    <select id="rec-status" class="btn small" style="min-height:36px" aria-label="添加为"><option value="已通过">已修 / 已通过</option><option value="在修">在修</option></select>
+    <button class="btn primary" id="rec-add" data-action="rec-add" ${state.recSel.length?'':'disabled'}>核对所选 (${state.recSel.length})</button>
   </div>`;
 }
 
@@ -8087,11 +8650,33 @@ function highlightText(text,matched){
   });
   return out;
 }
+function findAchievement(id){
+  if(!id) return null;
+  prepareAchievements(state.profile.achievements);
+  return state.profile.achievements.find(a=>a.id===id) || null;
+}
+let evidenceRun = 0;
+function selectEvidenceTarget(id){
+  evidenceRun++;
+  const item = findAchievement(id);
+  state.evTarget = item?.id ?? null;
+  state.evText = item ? (item.originalText ?? item.desc ?? '') : null;
+  state.evBusy = false;
+  state.evResult = null;
+}
+function createAchievement(type, title, desc=''){
+  prepareAchievements(state.profile.achievements);
+  const item = {id:newAchievementId(), type, title, desc, role:'', materials:[], verificationStatus:'unverified'};
+  state.profile.achievements.push(item);
+  return item;
+}
 function renderEvidence(){
   if(!ccLlmState.probed&&!ccLlmState.checking) setTimeout(()=>void ccProbeLlmStatus(),0);
+  prepareAchievements(state.profile.achievements);
   const sc = SCENARIOS[state.evScenario];
   const r = state.evResult;
-  const curText = $('#ev-text')?$('#ev-text').value:sc.text;
+  const item = findAchievement(state.evTarget);
+  const curText = state.evText ?? (r?._text || ($('#ev-text')?$('#ev-text').value:sc.text));
   const useQwen = ccLlmState.enabled && state.evEngine==='qwen';
   return `
   <div class="kicker">作品与经历工坊 · 30 秒结构化</div>
@@ -8099,9 +8684,13 @@ function renderEvidence(){
   <p class="page-sub">优先围绕<b>自研开源项目、学科竞赛、科研与实习交付</b>构建高权重职业证据；若暂无项目与实习，也支持在此把课设实验脱敏包装为冷启动过渡材料。没做的，绝不能写成做了。</p>
   <div class="ev-grid">
     <div class="ev-in">
+      <div class="field"><label for="ev-target">关联的成果</label><select id="ev-target"><option value="">另起一份经历</option>${state.profile.achievements.map(a=>`<option value="${esc(a.id)}" ${a.id===state.evTarget?'selected':''}>${esc(a.title)} · ${esc(a.id)}</option>`).join('')}</select></div>
+      ${item?`<div class="field"><label for="ev-role">个人角色</label><input id="ev-role" value="${esc(item.role||'')}" placeholder="例如：负责访谈提纲、核心接口实现或数据清洗"></div>
+      <div class="field"><label for="ev-materials">材料链接或说明 <small>每行一项</small></label><textarea id="ev-materials" rows="2" placeholder="GitHub 仓库链接、报告链接或佐证材料名称">${esc((item.materials||[]).join('\n'))}</textarea></div>
+      <small id="ev-local-status" class="muted" style="display:block;margin-bottom:10px;font-size:11.5px" role="status">角色和材料随输入保存到本地。</small>`:''}
       <div class="label">学生原始经历片段（自动隐私脱敏）</div>
-      <textarea id="ev-text" placeholder="贴上你的自研项目 / 竞赛获奖 / 实习复盘 / 或用于冷启动过渡的课程实验描述…">${esc(r?._text||curText)}</textarea>
-      <div class="scenario-row">${SCENARIOS.map((s,i)=>`<button class="sc-chip ${i===state.evScenario?'on':''}" data-action="ev-scenario" data-i="${i}">${s.chip}</button>`).join('')}</div>
+      <textarea id="ev-text" placeholder="贴上你的自研项目 / 竞赛获奖 / 实习复盘 / 或用于冷启动过渡的课程实验描述…">${esc(curText)}</textarea>
+      <div class="scenario-row" style="${item?'display:none':''}">${SCENARIOS.map((s,i)=>`<button class="sc-chip ${i===state.evScenario?'on':''}" data-action="ev-scenario" data-i="${i}">${s.chip}</button>`).join('')}</div>
       <button class="btn primary" style="width:100%" data-action="ev-analyze" ${state.evBusy?'disabled':''}>${state.evBusy?'正在分析…':useQwen?'✨ 规则对表 + 智能引擎拆成证据':'⚡ 30 秒拆成证据'}</button>
       <div class="engine-box">
         <b>分析引擎</b>
@@ -8160,7 +8749,7 @@ function evResultHTML(r){
   </div>
   <div class="ev-hidden"><b>你不知道的：</b>${esc(r.hidden)}</div>
   <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
-    <button class="btn primary" data-action="ev-save">存入我的成果档案 ✓</button>
+    <button class="btn primary" data-action="ev-save">${state.evTarget?'保存到这条成果 ✓':'存入我的成果档案 ✓'}</button>
     <button class="btn" data-action="nav" data-module="diag">看它怎么服务我的路径 →</button>
   </div>`;
 }
@@ -8168,6 +8757,8 @@ async function runEvidence(){
   const text = ($('#ev-text')?$('#ev-text').value:'').trim();
   if(!text){ toast('先贴一段作业原文，或点一个预设场景','warn'); return; }
   if(state.evBusy) return;
+  const run = ++evidenceRun;
+  state.evText = text;
   state.evBusy = true;
   const result = analyzeText(text);
   result._text = text;
@@ -8180,11 +8771,13 @@ async function runEvidence(){
       targetHint:targetReq?`${targetReq.title}（${targetReq.org||''}）`:'',
     },{
       onDelta:(streamTxt)=>{
+        if(run!==evidenceRun) return;
         const bar=$('#ev-bar'),prev=$('#ev-stream-preview');
         if(bar) bar.style.width='82%';
         if(prev) prev.innerHTML=`<div class="cc-copilot-stream">${esc(streamTxt)}</div>`;
       },
       onDone:(done)=>{
+        if(run!==evidenceRun) return;
         const r=done.result||{};
         if(r.framing) result.llmFraming=r.framing;
         if(r.bullets?.length){
@@ -8201,13 +8794,16 @@ async function runEvidence(){
         result.model=done.model;
         state.evBusy=false;
         state.evResult=result;
+        if(state.module!=='evidence'){ save(); return; }
         render();
         $('#ev-out')?.scrollIntoView({behavior:'smooth',block:'nearest'});
         toast((done.model||'智能引擎')+' 拆解完成：有据证据已生成'+(done.failoverFrom?'（'+done.failoverFrom+' 高峰自动切换）':''));
       },
       onError:()=>{
+        if(run!==evidenceRun) return;
         state.evBusy=false;
         state.evResult=result;
+        if(state.module!=='evidence'){ save(); return; }
         render();
         toast('智能副驾暂未响应，已自动按确定性规则引擎生成证据','warn');
       },
@@ -8217,14 +8813,17 @@ async function runEvidence(){
   const steps = [['读取原文…',15],['识别角色与交付物…',40],['匹配技能证据…',68],['补上你不知道的规则与日期…',90]];
   steps.forEach(([txt,pctv],i)=>{
     setTimeout(()=>{
+      if(run!==evidenceRun) return;
       const st = $('#ev-status-text'), bar = $('#ev-bar');
       if(st) st.textContent = txt;
       if(bar) bar.style.width = pctv+'%';
     },420*i+200);
   });
   setTimeout(()=>{
+    if(run!==evidenceRun) return;
     state.evBusy = false;
     state.evResult = result;
+    if(state.module!=='evidence'){ save(); return; }
     render();
     const out = $('#ev-out');
     if(out) out.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -8244,39 +8843,135 @@ function closeOverlays(){
   $('#sidebar').classList.remove('open');
 }
 
-/* ================= 课程获取 ================= */
-function addCourses(names,status,metaFn){
+/* ================= 课程获取与核对 ================= */
+function addCourses(names,status,metaFn,source='简历自动导入'){
   let added = 0;
   names.forEach(n=>{
     const name = String(n).trim();
     if(!name) return;
-    if(state.profile.courses.some(c=>c.name.trim().toLowerCase()===name.toLowerCase())) return;
+    if(state.profile.courses.some(c=>courseKey(c.name)===courseKey(name))) return;
     const meta = metaFn?metaFn(name):{};
-    state.profile.courses.push({name,status,cr:meta.cr||null,tm:meta.tm||null});
+    state.profile.courses.push({
+      name,
+      status,
+      school:state.profile.school||'',
+      major:state.profile.major||'',
+      version:'',
+      source,
+      cr:meta.cr||null,
+      tm:meta.tm||null,
+    });
     added++;
   });
   return added;
 }
+function startCourseReview(candidates, status, source, school, major){
+  if(!candidates.length) return;
+  const seen = new Set();
+  const rows = [];
+  for(const c of candidates){
+    const key = courseKey(c.n);
+    if(seen.has(key)) continue;
+    seen.add(key);
+    const duplicate = state.profile.courses.some(item=>courseKey(item.name)===key);
+    rows.push({name:c.n, cr:c.cr??null, tm:c.tm??null, status, decision:duplicate?'keep':'add'});
+  }
+  state.courseReview = {school:school||'', major:major||'', version:'', source:source||'手动录入', rows};
+  render();
+}
+function renderCourseReview(){
+  const batch = state.courseReview;
+  return `<div class="acq-head"><strong>核对候选课程 · ${batch.rows.length} 门</strong></div>
+    <p class="acq-note">来源：${esc(batch.source)}。请核对本批课程所属的培养方案信息，再逐门确认修读状态与重复处理方式。</p>
+    <div class="form-grid" style="margin-bottom:14px">${[['school','所属学校'],['major','所属专业'],['version','培养方案版本']].map(([key,label])=>`
+      <div class="field"><label for="batch-${key}">${label}</label><input id="batch-${key}" data-course-context="${key}" value="${esc(batch[key])}" placeholder="${key==='version'?'如：2024 级培养方案':'未知可留空'}"></div>`).join('')}</div>
+    ${batch.rows.map((row,i)=>{
+      const options = [];
+      const matches = [];
+      state.profile.courses.forEach((c,index)=>{
+        if(courseKey(c.name)!==courseKey(row.name)) return;
+        matches.push(`<div class="lr-sub">档案已有：${esc(c.name)} · ${esc(displayStatus(c.status))} · ${esc(courseOrigin(c)||'旧记录')}</div>`);
+        options.push(['update:'+index,'更新记录 '+(matches.length)+'：'+displayStatus(c.status)+' · '+(courseOrigin(c)||'旧记录')]);
+      });
+      options.unshift(['keep',matches.length?'保留原记录，跳过本门':'跳过本门']);
+      options.push(['add',matches.length?'作为另一条修读记录新增':'新增修读记录']);
+      const statusOpts = [['已通过','已修 / 已通过'],['在修','在修'],['未通过','未通过']];
+      return `<div class="list-row"><div class="lr-main"><div class="lr-title">${esc(row.name)}</div>${matches.join('')}
+        <div class="add-row" style="margin:8px 0 0"><label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px">本次状态 <select data-review-status="${i}">${statusOpts.map(([val,lbl])=>`<option value="${val}" ${(row.status===val||(val==='已通过'&&row.status==='已修'))?'selected':''}>${lbl}</option>`).join('')}</select></label>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;max-width:100%">处理方式 <select style="max-width:100%" data-review-decision="${i}">${options.map(([v,label])=>`<option value="${v}" ${row.decision===v?'selected':''}>${esc(label)}</option>`).join('')}</select></label></div></div></div>`;
+    }).join('')}
+    <div class="acq-bar"><button class="btn" data-action="course-review-cancel">取消核对</button>
+    <button class="btn primary" data-action="course-review-save">确认并保存</button></div>`;
+}
+function commitCourseReview(){
+  const batch = state.courseReview;
+  if(!batch) return;
+  let added=0, updated=0;
+  for(const row of batch.rows){
+    if(row.decision==='keep') continue;
+    const entry = {
+      name:row.name,
+      status:row.status,
+      school:batch.school.trim(),
+      major:batch.major.trim(),
+      version:batch.version.trim(),
+      source:batch.source,
+      cr:row.cr,
+      tm:row.tm,
+    };
+    if(row.decision==='add'){
+      state.profile.courses.push(entry);
+      added++;
+    }else{
+      const existing = state.profile.courses[Number(row.decision.split(':')[1])];
+      if(!existing || courseKey(existing.name)!==courseKey(row.name)) continue;
+      for(const key of ['school','major','version','cr','tm']) if(entry[key]==='' || entry[key]==null) entry[key]=existing[key]??entry[key];
+      Object.assign(existing,entry);
+      updated++;
+    }
+  }
+  state.courseReview=null; state.upSel=[]; state.recSel=[];
+  ccClearProfileCopilotCache();
+  render();
+  if(!save()){ toast('本次修改仅在当前页面生效，浏览器未能保存。','warn'); return; }
+  toast(`已新增 ${added} 门，更新 ${updated} 门，跳过 ${batch.rows.length-added-updated} 门。`);
+}
 function handleFile(file){
-  if(!file) return;
-  state.uploadBusy = true; state.uploadResult = null; render();
+  if(!file || state.uploadBusy) return;
+  const owner = state.profile;
+  const {school, major} = owner;
+  state.uploadBusy = true; state.uploadResult = null; state.upSel = []; render();
   const name = file.name, ext = (name.split('.').pop()||'').toLowerCase();
   const parseableDoc = ['csv','txt','md','pdf','docx'].includes(ext)||file.type.startsWith('text/')||file.type==='application/pdf'||file.type.includes('wordprocessingml');
   const fallback = ()=>{
-    const major = state.profile.major;
+    if(state.profile!==owner) return;
     const courses = allCurriculumCourses(major).map(x=>({n:x.n,cat:x.cat,cr:x.cr,tm:x.tm,conf:'mid'}));
     state.uploadBusy = false;
-    state.uploadResult = {fileName:name,courses,
-      note:`候选回退：未从 ${name} 提取到结构化课程名，已按「${major||'你的专业'}」公开培养方案生成候选供核对。`};
+    state.uploadResult = {
+      fileName:name,
+      source:'公开方案回退 · '+name,
+      school,
+      major,
+      courses,
+      note:`候选回退：未从 ${name} 提取到结构化课程名，已按「${major||'你的专业'}」公开培养方案生成候选供核对。`,
+    };
     state.upSel = courses.map(c=>c.n);
     render(); toast('解析完成：'+courses.length+' 门课程候选，请核对后添加');
   };
   if(parseableDoc){
     ccExtractDocumentText(file).then(t=>{
-      const c = parsePlanText(t);
+      if(state.profile!==owner) return;
+      const c = parsePlanText(t, major);
       if(c.length){
         state.uploadBusy = false;
-        state.uploadResult = {fileName:name,courses:c,note:`已从「${name}」原文抽取 ${c.length} 门课程候选；高置信为匹配公开方案，待核对请自行确认。`};
+        state.uploadResult = {
+          fileName:name,
+          source:'文件导入 · '+name,
+          school,
+          major,
+          courses:c,
+          note:`已从「${name}」原文抽取 ${c.length} 门课程候选；勾选本人修读过的课程，进入核对后保存。`,
+        };
         state.upSel = c.map(x=>x.n);
         render(); toast('识别到 '+c.length+' 门课程候选，请核对后添加');
       } else fallback();
@@ -8286,7 +8981,7 @@ function handleFile(file){
 function refreshRecBar(){
   const cnt = $('#rec-count'), btn = $('#rec-add');
   if(cnt) cnt.textContent = state.recSel.length;
-  if(btn){ btn.disabled = !state.recSel.length; btn.textContent = '添加所选 ('+state.recSel.length+')'; }
+  if(btn){ btn.disabled = !state.recSel.length; btn.textContent = '核对所选 ('+state.recSel.length+')'; }
   document.querySelectorAll('#rec-groups .rec-group').forEach(g=>{
     const rows = [...g.querySelectorAll('.rec-row')];
     const sel = rows.filter(r=>r.querySelector('input').checked).length;
@@ -8296,7 +8991,7 @@ function refreshRecBar(){
 function refreshUpBar(){
   const cnt = $('#up-count'), btn = $('#up-add');
   if(cnt) cnt.textContent = state.upSel.length;
-  if(btn){ btn.disabled = !state.upSel.length; btn.textContent = '添加所选 ('+state.upSel.length+')'; }
+  if(btn){ btn.disabled = !state.upSel.length; btn.textContent = '核对所选 ('+state.upSel.length+')'; }
 }
 
 /* ================= 事件 ================= */
@@ -8320,29 +9015,48 @@ document.addEventListener('click',e=>{
   else if(a==='radar-dismiss'){ state.radarDismissed.push(el.dataset.id); state.radarRead=false; openRadar(); render(); }
   else if(a==='dash-filter'){ state.dashFilter = el.dataset.f; render(); }
   else if(a==='demo-fill'){
-    state.profile = JSON.parse(JSON.stringify(DEMO_PROFILE));
+    state.courseReview=null; state.uploadBusy=false; state.uploadResult=null; state.recSel=[]; state.upSel=[];
+    selectEvidenceTarget(null);
+    state.profile = normalizeProfile(JSON.parse(JSON.stringify(DEMO_PROFILE)));
+    for(const c of state.profile.courses) Object.assign(c,{school:state.profile.school,major:state.profile.major,version:'',source:'演示档案'});
     ccClearProfileCopilotCache();
     toast('演示档案已填入：临江大学 · 汉语言文学 · 18/120');
     render();
   }
   else if(a==='profile-prev'){ state.profilePage = Math.max(0,state.profilePage-1); render(); }
   else if(a==='profile-next'){
-    if(state.profilePage===0&&(!state.profile.school.trim()||!state.profile.major.trim())){ toast('学校与专业是必填项，其余可以留空','warn'); return; }
+    if(state.profilePage===0){
+      if(!syncBasicProfile(true)) return;
+      if(!state.profile.school.trim()||!state.profile.major.trim()){ toast('学校与专业是必填项，其余可以留空','warn'); return; }
+    }
     state.profilePage = Math.min(3,state.profilePage+1); render();
   }
   else if(a==='profile-save'){
+    if(state.profilePage===0 && !syncBasicProfile(true)) return;
     if(!state.profile.school.trim()||!state.profile.major.trim()){ state.profilePage=0; render(); toast('学校与专业还没填，先补上','warn'); return; }
-    state.profile.saved = true; ccClearProfileCopilotCache(); state.module='paths'; render(); window.scrollTo({top:0});
-    toast('档案已保存。现在选你正在考虑的路');
+    state.profile.saved = true;
+    recordProfileSnapshot();
+    ccClearProfileCopilotCache();
+    state.module='paths';
+    render();
+    window.scrollTo({top:0});
+    const verText = versionLabel(state.confirmed, confirmedVersions().length - 1);
+    if(ccVault.isAuthenticated()){
+      void ccVault.flush().then(()=>toast('已加密保存确认档案：'+verText)).catch(err=>toast(err.message,'warn'));
+    }else{
+      toast('档案已保存并生成快照（'+verText+'）。现在选你正在考虑的路');
+    }
   }
   else if(a==='course-add'||a==='course-suggest'){
     const name = a==='course-suggest'?el.dataset.name:($('#course-input')?$('#course-input').value.trim():'');
     if(!name){ toast('先输入课程名','warn'); return; }
-    if(state.profile.courses.some(c=>c.name===name)){ toast('这门课已经在列表里了','warn'); return; }
     const status = a==='course-suggest'?'已通过':($('#course-status')?$('#course-status').value:'已通过');
-    state.profile.courses.push({name,status}); render(); toast('已添加：'+name);
+    startCourseReview([{n:name}], status, '手动录入', state.profile.school, state.profile.major);
   }
+  else if(a==='course-review-cancel'){ state.courseReview=null; render(); }
+  else if(a==='course-review-save'){ commitCourseReview(); }
   else if(a==='course-del'){
+    if(state.courseReview) return;
     const [course]=state.profile.courses.splice(+el.dataset.i,1);
     const id=course?.id||window.CC.resolveCourseId(course?.name,window.CC.majorOf(state.profile.major));
     if(id&&state.profile.completedCourseIds) state.profile.completedCourseIds=state.profile.completedCourseIds.filter(cid=>cid!==id);
@@ -8350,13 +9064,20 @@ document.addEventListener('click',e=>{
   }
   else if(a==='course-mode'){ state.courseMode = el.dataset.mode; render(); }
   else if(a==='goto-page1'){ state.profilePage = 0; render(); }
-  else if(a==='dz-click'){ const fi=$('#file-input'); if(fi) fi.click(); }
+  else if(a==='dz-click'){ const fi=$('#file-input'); if(fi && e.target!==fi) fi.click(); }
   else if(a==='parse-text'){
     const txt = $('#plan-text')?$('#plan-text').value:'';
     if(!txt.trim()){ toast('先粘贴培养方案文本','warn'); return; }
-    const courses = parsePlanText(txt);
-    if(!courses.length){ toast('未识别到课程名，请检查文本或改用上传 / 推荐','warn'); return; }
-    state.uploadResult = {fileName:'粘贴文本',note:'从你粘贴的文本中抽取课程候选；高置信为匹配公开方案，待核对请自行确认。',courses};
+    const courses = parsePlanText(txt, state.profile.major);
+    if(!courses.length){ state.uploadResult=null; state.upSel=[]; render(); toast('未识别到课程名，请检查文本或改用上传 / 推荐','warn'); return; }
+    state.uploadResult = {
+      fileName:'粘贴文本',
+      source:'粘贴培养方案文本',
+      school:state.profile.school,
+      major:state.profile.major,
+      note:'勾选本人修读过的课程，进入来源与重复核对后再保存。',
+      courses,
+    };
     state.upSel = courses.map(c=>c.n);
     render(); toast('识别到 '+courses.length+' 门课程候选，请核对后添加');
   }
@@ -8365,9 +9086,7 @@ document.addEventListener('click',e=>{
   else if(a==='up-add'){
     const r = state.uploadResult; if(!r||!state.upSel.length) return;
     const status = $('#up-status')?$('#up-status').value:'已通过';
-    const added = addCourses(state.upSel,status,n=>{ const c=r.courses.find(x=>x.n===n); return c?{cr:c.cr,tm:c.tm}:{}; });
-    state.upSel = []; render();
-    toast(added?`已添加 ${added} 门课程（${status}）`:'所选课程都已在档案中','warn');
+    startCourseReview(r.courses.filter(c=>state.upSel.includes(c.n)), status, r.source||'文件导入', r.school??state.profile.school, r.major??state.profile.major);
   }
   else if(a==='rec-core'){
     const cur = getCurriculum(state.profile.major);
@@ -8380,15 +9099,23 @@ document.addEventListener('click',e=>{
   else if(a==='rec-add'){
     if(!state.recSel.length) return;
     const status = $('#rec-status')?$('#rec-status').value:'已通过';
-    const all = allCurriculumCourses(state.profile.major);
-    const added = addCourses(state.recSel,status,n=>{ const c=all.find(x=>x.n===n); return c?{cr:c.cr,tm:c.tm}:{}; });
-    state.recSel = []; render();
-    toast(added?`已添加 ${added} 门课程（${status}）`:'所选课程都已在档案中','warn');
+    const candidates = allCurriculumCourses(state.profile.major).filter(c=>state.recSel.includes(c.n));
+    startCourseReview(candidates, status, '内置专业参考 · '+getCurriculum(state.profile.major).label, state.profile.school, state.profile.major);
   }
   else if(a==='ach-add'){
     const title = $('#ach-input')?$('#ach-input').value.trim():'';
     if(!title){ toast('先输入成果名称','warn'); return; }
-    state.profile.achievements.push({type:$('#ach-type').value,title,desc:'',verificationStatus:'unverified'}); render(); toast('已添加成果：'+title);
+    const desc = $('#ach-desc')?$('#ach-desc').value.trim():'';
+    createAchievement($('#ach-type').value, title, desc);
+    ccClearProfileCopilotCache();
+    render();
+    toast(save()?'已添加成果：'+title:'浏览器未能保存，刷新后这条成果可能丢失。', save()?'ok':'warn');
+  }
+  else if(a==='ach-evidence'){
+    selectEvidenceTarget(el.dataset.id);
+    state.module='evidence';
+    render();
+    window.scrollTo({top:0});
   }
   else if(a==='ach-verify'){
     const entry=state.profile.achievements[+el.dataset.i];
@@ -8405,8 +9132,17 @@ document.addEventListener('click',e=>{
     toast(entry.verified?'已确认属实，对应技能已升级为「已实证」✓':'已设为待核验');
   }
   else if(a==='ach-del'){
-    const [entry]=state.profile.achievements.splice(+el.dataset.i,1);
-    if(entry&&state.profile.evidences) state.profile.evidences=state.profile.evidences.filter(e=>entry.id?e.id!==entry.id:e.title!==entry.title);
+    const targetId = el.dataset.id;
+    let removed = null;
+    if(targetId){
+      if(targetId===state.evTarget) selectEvidenceTarget(null);
+      removed = state.profile.achievements.find(item=>item.id===targetId) || null;
+      state.profile.achievements = state.profile.achievements.filter(item=>item.id!==targetId);
+    }else{
+      [removed] = state.profile.achievements.splice(+el.dataset.i,1);
+    }
+    if(removed&&state.profile.evidences) state.profile.evidences=state.profile.evidences.filter(e=>removed.id?e.id!==removed.id:e.title!==removed.title);
+    ccClearProfileCopilotCache();
     render();
   }
   else if(a==='path-toggle'){
@@ -8442,28 +9178,46 @@ document.addEventListener('click',e=>{
   }
   else if(a==='calc-swap'){ const t = state.calcA; state.calcA = state.calcB; state.calcB = t; render(); }
   else if(a==='ev-scenario'){
-    state.evScenario = +el.dataset.i; state.evResult = null; render();
+    selectEvidenceTarget(null); state.evScenario = +el.dataset.i; state.evResult = null; render();
   }
   else if(a==='ev-analyze'){ void runEvidence(); }
   else if(a==='ev-save'){
     const r = state.evResult; if(!r) return;
+    if($('#ev-text') && r._text && r._text !== $('#ev-text').value.trim()){
+      toast('原文已修改，请重新分析后保存。','warn');
+      return;
+    }
     const title = ccStripMd(r.project.name);
-    if(state.profile.achievements.some(x=>x.title===title)){ toast('这份成果已经在档案里了','warn'); return; }
     const detectedType = r.detectedType || '课程作业';
     const rawDesc = ccMaskClientPii(ccStripMd(r._text||'')).slice(0,1200);
     const bulletLine = (r.bullets||[]).map(b=>b.text).join('\n');
-    state.profile.achievements.push({
-      type:detectedType,
-      title,
-      desc:(bulletLine||rawDesc||('技能证据：'+r.project.skills.join(' / '))).slice(0,1600),
-      artifactUrl:r.artifactUrl||null,
-      verificationStatus:detectedType==='课程作业'?'unverified':'user_confirmed',
-      verified:detectedType!=='课程作业',
-    });
+    const summaryDesc = (bulletLine||rawDesc||('技能证据：'+r.project.skills.join(' / '))).slice(0,1600);
+    let item = findAchievement(state.evTarget);
+    if(state.evTarget && !item){
+      toast('这条成果已移除，请重新选择。','warn');
+      return;
+    }
+    if(!item){
+      if(state.profile.achievements.some(x=>x.title===title)){
+        toast('这份成果已经在档案里了','warn');
+        return;
+      }
+      item = createAchievement(detectedType, title, summaryDesc);
+      item.artifactUrl = r.artifactUrl || null;
+      if(r.artifactUrl && !item.materials.includes(r.artifactUrl)) item.materials.push(r.artifactUrl);
+      item.verificationStatus = detectedType==='课程作业'?'unverified':'user_confirmed';
+      item.verified = detectedType!=='课程作业';
+      state.evTarget = item.id;
+    }else{
+      if(!item.desc) item.desc = summaryDesc;
+      if(r.artifactUrl && !item.artifactUrl) item.artifactUrl = r.artifactUrl;
+    }
+    item.originalText = r._text;
+    item.suggestedSkills = [...(r.project.skills || [])];
     state.profile.saved = true;
     ccClearProfileCopilotCache();
-    save(); renderChrome();
-    toast(`已按「${detectedType}」存入成果档案，诊断与岗位匹配已同步更新 ✓`);
+    render();
+    toast(save() ? `已保存到成果 ${item.id}（${detectedType}），诊断与岗位匹配已同步更新 ✓` : '浏览器未能保存，刷新后本次修改可能丢失。', save()?'ok':'warn');
   }
   else if(a==='intel-cat'){ state.intel.cat = el.dataset.cat; render(); }
   else if(a==='intel-savedonly'){ state.intel.savedOnly = !state.intel.savedOnly; render(); }
@@ -8495,6 +9249,18 @@ document.addEventListener('click',e=>{
     }});
   }
   else if(a==='intel-restore'){ state.intelDismissed = []; state.intelUndo=null; render(); toast('已恢复全部忽略的情报'); }
+  else if(a==='account-open'){ ccVault.openModal(); }
+  else if(a==='logout'){ ccVault.logout(); }
+  else if(a==='profile-retry'){ ccVault.flush().then(()=>toast('已重新保存 ✓')).catch(err=>toast(err.message,'warn')); }
+  else if(a==='profile-history'){ showHistory(); }
+  else if(a==='profile-export'){ void ccVault.action(profileExport); }
+  else if(a==='time-review'){ state.profilePage=3; state.module='profile'; render(); }
+  else if(a==='profile-delete'){
+    const msg = ccVault.isAuthenticated()
+      ? '保留当前账号并清空本人的草稿、全部历史档案、课程、成果及反馈（同时使旧加密密钥与其他登录会话失效）？此操作无法撤销，已导出的 JSON 文件需自行删除。'
+      : '确定清空当前浏览器中的个人档案、全部确认历史、课程与成果记录？此操作无法撤销。';
+    if(confirm(msg)) ccVault.erase();
+  }
   else if(a==='reset-all'){
     if(confirm('确定重置全部演示数据？档案、路径与成果都会清空。')){
       state = freshState(); ccResumeDrafts=[]; ccPracticeFolders.clear(); ccRoadmapReviews.clear(); ccGrowthRuns.clear(); ccClearProfileCopilotCache(); ccJdCopilotRuns.clear(); window.CC.setImportedJobs([]); save(); closeOverlays(); render(); toast('已重置为初始状态');
@@ -8772,6 +9538,22 @@ document.addEventListener('click',e=>{
   else if(a==='cc-check-update'){ ccCheckUpdate(); }
 });
 document.addEventListener('input',e=>{
+  if(e.target.id==='ev-role' || e.target.id==='ev-materials'){
+    const item = findAchievement(state.evTarget);
+    if(!item) return;
+    if(e.target.id==='ev-role') item.role = e.target.value.trim();
+    else item.materials = e.target.value.split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
+    ccClearProfileCopilotCache();
+    const stEl = $('#ev-local-status');
+    if(stEl) stEl.textContent = save() ? '已保存在当前浏览器。' : '浏览器未能保存，刷新后本次修改可能丢失。';
+    return;
+  }
+  if(e.target.id==='ev-text'){ state.evText = e.target.value; save(); return; }
+  if(e.target.dataset.courseContext && state.courseReview){
+    state.courseReview[e.target.dataset.courseContext] = e.target.value;
+    save();
+    return;
+  }
   const contestList=e.target.closest('[data-contest-reference]');
   if(contestList&&e.target.matches('[data-contest-search],[data-contest-grade]')){
     const text=contestList.querySelector('[data-contest-search]').value.trim().toLowerCase();
@@ -8813,17 +9595,33 @@ document.addEventListener('input',e=>{
   const f = e.target.dataset.field;
   if(f){
     if(f.indexOf('intel.')===0) return;
+    if(e.target.closest('#basic-profile')){ syncBasicProfile(); return; }
     const numeric = ['rank','rankTotal','gpa','weeklyHours'];
     let v = e.target.value;
     if(numeric.includes(f)) v = v===''?null:Math.max(0,Number(v));
     state.profile[f] = v;
     if(f==='graduationDate') state.profile.graduationDateSource=v?'user_confirmed':null;
+    if($('#draft-status')){
+      $('#draft-status').textContent = profileStatus();
+      if($('#draft-hours')) $('#draft-hours').textContent = state.profile.weeklyHours;
+      if($('#draft-intern')) $('#draft-intern').textContent = state.profile.intern;
+    }
     if(f==='weeklyHours'){ const hv = $('#hours-val'); if(hv) hv.innerHTML = v+'<small> 小时/周</small>'; }
     if(f==='rank'||f==='rankTotal') updatePctPreview();
     save();
   }
 });
 document.addEventListener('change',e=>{
+  if(e.target.id==='history-version'){ showHistoryVersion(); return; }
+  if(e.target.id==='ev-target'){ selectEvidenceTarget(e.target.value); render(); return; }
+  if(e.target.hasAttribute('data-review-decision') || e.target.hasAttribute('data-review-status')){
+    if(!state.courseReview) return;
+    const d = e.target.dataset;
+    const row = state.courseReview.rows[d.reviewDecision ?? d.reviewStatus];
+    if(row) row[d.reviewDecision!=null?'decision':'status'] = e.target.value;
+    save();
+    return;
+  }
   if(e.target.hasAttribute('data-cc-switch-persona')){
     if(e.target.value) applyPersona(e.target.value);
     return;
@@ -8915,7 +9713,13 @@ document.addEventListener('change',e=>{
   if(e.target.dataset.field){
     const f = e.target.dataset.field;
     if(f.indexOf('intel.')===0){ state.intel[f.slice(6)] = e.target.value; render(); return; }
-    state.profile[f] = e.target.value;
+    if(e.target.closest('#basic-profile')){ syncBasicProfile(); renderChrome(); return; }
+    state.profile[f] = f==='weeklyHours'?Number(e.target.value):e.target.value;
+    if($('#draft-status')){
+      $('#draft-status').textContent = profileStatus();
+      if($('#draft-hours')) $('#draft-hours').textContent = state.profile.weeklyHours;
+      if($('#draft-intern')) $('#draft-intern').textContent = state.profile.intern;
+    }
     save(); renderChrome();
   }
 });
@@ -9014,7 +9818,9 @@ document.addEventListener('submit',e=>{
     }
     if(pr.intent) j.preferences.otherDirection=pr.intent;
     if(pr.jobTypes?.length) j.preferences.jobTypes=pr.jobTypes;
+    prepareAchievements(state.profile.achievements);
     state.profile.saved=true;
+    recordProfileSnapshot();
     j.personaId=null;
     j.personalized=true;
     if(!state.paths.includes('jiuye')) state.paths.push('jiuye');
@@ -9191,6 +9997,7 @@ window.addEventListener('popstate',ccRestoreEmploymentHistory);
 window.addEventListener('hashchange',()=>{ if(location.hash!==ccLastHash) ccRestoreEmploymentHistory(); });
 ccReadEmploymentHistory();
 render();
+ccVault.init();
 </script>
 </body>
 </html>

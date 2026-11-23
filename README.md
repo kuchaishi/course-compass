@@ -40,6 +40,7 @@ node _build-inline.mjs --check
 ### 本地 / Qoder Sites 服务与接口
 
 运行 `node _serve.mjs` 后，除前端页面外，同源提供以下 API：
+- `POST /api/register`、`POST /api/login`、`GET /api/session`、`POST /api/logout`、`POST /api/profile/delete`：本机回环地址专属的学生账号加密身份服务（SQLite + `scrypt` 密码校验 + Web Crypto `AES-GCM` 浏览器端加密保险箱 + Web Locks 防多标签冲突 + 删档轮换密钥且保持原账号登录）。
 - `GET /api/employment/live-sync`：实时拉取腾讯 / SmartRecruiters / Greenhouse 公开岗位。
 - `GET /api/employment/warehouse`：检索本地 `318,433` 条 SQLite 招聘仓（支持关键词、城市、岗位类型、薪资筛选）。
 - `GET /api/employment/calendar`：检索 `5,611` 条校招日历及官网直投入口（按企业去重与批次排序）。
