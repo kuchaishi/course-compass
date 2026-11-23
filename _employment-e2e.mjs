@@ -707,6 +707,7 @@ try {
   await reviewPage.locator('[data-field="school"]').fill('E2E_PRIVATE_SCHOOL');
   await reviewPage.locator('[data-field="major"]').fill('机械电子工程');
   for(let i=0;i<3;i++) await reviewPage.locator('[data-action="profile-next"]').click();
+  await reviewPage.locator('[data-action="gate-defer-all"]').first().click();
   await reviewPage.locator('[data-action="profile-save"]').click();
   await reviewPage.locator('.nav-item[data-module="jobs"]').click();
   await reviewPage.locator('.cc-employment-nav [data-mode="list"]').click();
@@ -885,16 +886,51 @@ try {
     assert.ok(await vaultPage.getByText('2024级培养方案', { exact: false }).isVisible());
     await vaultPage.locator('[data-action="profile-next"]').click();
 
-    await vaultPage.locator('#ach-type').selectOption('项目');
-    await vaultPage.locator('#ach-input').fill('高并发选课网关');
-    await vaultPage.locator('#ach-desc').fill('完成核心限流模块');
-    await vaultPage.locator('[data-action="ach-add"]').click();
-    await vaultPage.locator('[data-action="ach-evidence"]').first().click();
+    // Step 04: Experience Workshop — verify AI/rule suggestions do NOT enter profile until user confirms in Step 4 edit area
+    await vaultPage.locator('#ev-text').fill('独立开发高并发选课网关项目，使用 Java Spring Boot 与 Redis Lua 实现分布式限流。');
+    await vaultPage.locator('[data-action="ev-analyze"]').click();
+    await vaultPage.locator('#ws-title').waitFor();
+    assert.equal(await vaultPage.evaluate(() => state.profile.achievements.length), 0, 'Suggestions must not auto-write to profile before confirmation');
+    await vaultPage.locator('#ws-title').fill('高并发选课网关');
     await vaultPage.locator('#ev-role').fill('负责 Spring Boot 与 Redis Lua 限流器');
     await vaultPage.locator('#ev-materials').fill('https://example.com/course-gateway');
-    await vaultPage.locator('.nav-item[data-module="profile"]').click();
+    await vaultPage.locator('#ws-truth').check();
+    await vaultPage.locator('[data-action="ev-save"]').click();
+    assert.equal(await vaultPage.evaluate(() => state.profile.achievements.length), 1);
     await vaultPage.locator('[data-action="profile-next"]').click();
+
+    // Step 05: Parallel schedules (05a) + available time (05b) + synced achievements (05c) + Completeness Gate -> Step 06 Preview
+    await vaultPage.locator('#sch-title').fill('秋季期末集中考试周');
+    await vaultPage.locator('#sch-start').fill('2027-01-11');
+    await vaultPage.locator('#sch-end').fill('2027-01-22');
+    await vaultPage.locator('#sch-slots').fill('全天复习与考试');
+    await vaultPage.locator('[data-action="sch-add"]').click();
+    assert.ok(await vaultPage.locator('.list-row').getByText('秋季期末集中考试周', { exact: false }).first().isVisible());
+    assert.ok(await vaultPage.locator('.list-row').getByText('高并发选课网关', { exact: false }).first().isVisible());
+    await vaultPage.locator('[data-action="gate-defer-all"], [data-action="goto-preview"]').first().click();
+
+    // Step 06: Structured Capability Profile default view -> toggle Resume view -> Confirm & Archive
+    assert.ok(await vaultPage.getByText('客观提取技能图谱', { exact: false }).first().isVisible());
+    await vaultPage.locator('[data-action="preview-mode"][data-mode="resume"]').click();
+    assert.ok(await vaultPage.getByRole('article', { name: '基础简历预览视图' }).isVisible());
+    await vaultPage.locator('[data-action="preview-mode"][data-mode="capability"]').click();
     await vaultPage.locator('[data-action="profile-save"]').click();
+
+    // Step 07: Path selection with mandatory Primary Path & Priority Order -> Step 08 Diagnosis -> Step 09 Job Save Write-Back -> Step 10 Conflict Chart
+    await vaultPage.locator('[data-action="path-toggle"][data-path="kaoyan"]').click();
+    await vaultPage.locator('[data-action="path-toggle"][data-path="jiuye"]').click();
+    await vaultPage.locator('[data-action="path-primary"][data-path="jiuye"]').click();
+    assert.equal(await vaultPage.evaluate(() => state.primaryPath), 'jiuye');
+    await vaultPage.locator('[data-action="go-diag"]').click();
+    assert.ok(await vaultPage.locator('.diag-head').getByText('★ 主路径 · 就业', { exact: false }).first().isVisible());
+    await vaultPage.locator('.nav-item[data-module="jobs"]').click();
+    await vaultPage.locator('.cc-employment-nav [data-mode="list"]').click();
+    await vaultPage.locator('.cc-job-card [data-action="cc-save-job"]').first().click();
+    await vaultPage.locator('.nav-item[data-module="diag"]').click();
+    assert.ok(await vaultPage.locator('#global-action-plan').getByText('09 投递节点回写', { exact: false }).first().isVisible());
+    await vaultPage.locator('.nav-item[data-module="conflict"]').click();
+    assert.ok(await vaultPage.getByText('秋季期末集中考试周', { exact: false }).first().isVisible());
+    assert.ok(await vaultPage.getByText('待补信息与不确定性声明', { exact: false }).first().isVisible());
 
     const encryptedCheck = await vaultPage.evaluate(() => {
       const keys = Object.keys(localStorage).filter(k => k.startsWith('cc.profile.'));
