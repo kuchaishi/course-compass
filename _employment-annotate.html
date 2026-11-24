@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>就业岗位专家标注</title>
+<style>
+body{max-width:900px;margin:28px auto;padding:0 18px;color:#24352c;background:#f7f6f1;font:16px/1.55 system-ui,sans-serif}
+section,article{padding:16px;margin:12px 0;background:#fff;border:1px solid #deded2;border-radius:10px}
+h1,h2,h3,p{margin:0 0 8px}h3{font-size:1.05em} pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;margin:8px 0}
+button,select{font:inherit;padding:6px;color:inherit} a{color:#145d57} .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+</style>
+<main>
+  <h1>就业岗位专家标注</h1>
+  <p>根据画像中的证据和固定快照独立判断相关性。信息不足可跳过。离开前请下载标注，下次可导入继续。</p>
+  <div class="actions"><label>案例 <select id="case"></select></label><button id="download" disabled>下载专家标注</button>
+  <span id="progress" role="status"></span></div>
+  <div class="actions"><label>导入已下载的标注 <input id="resume" type="file" accept=".json,application/json"></label>
+  <span id="resume-status" role="status"></span></div>
+  <div id="detail"></div>
+</main>
+<script>
+const data=/*__REVIEW_DATA__*/;
+const grades=new Map();
+const selector=document.getElementById('case'),detail=document.getElementById('detail');
+const progress=document.getElementById('progress'),download=document.getElementById('download');
+const resume=document.getElementById('resume'),resumeStatus=document.getElementById('resume-status');
+const allowedCandidates=new Map(data.cases.map(record=>[record.caseId,new Set(record.candidates.map(candidate=>candidate.jobId))]));
+function add(parent,tag,text){
+  const element=document.createElement(tag);
+  if(text!=null) element.textContent=text;
+  parent.append(element);
+  return element;
+}
+data.cases.forEach((record,index)=>{
+  const option=add(selector,'option','案例 '+(index+1));
+  option.value=index;
+});
+function updateProgress(){
+  const answered=[...grades.values()].reduce((count,entry)=>count+entry.size,0);
+  const total=data.cases.reduce((count,entry)=>count+entry.candidates.length,0);
+  const current=data.cases[Number(selector.value)];
+  progress.textContent='当前案例 '+(grades.get(current.caseId)?.size||0)+' / '+current.candidates.length+
+    ' · 全批次 '+answered+' / '+total;
+  download.disabled=!answered;
+}
+const gradeOptions=['跳过 · 证据不足','0 · 明显不相关','1 · 可探索','2 · 值得投','3 · 高优先级'];
+function render(){
+  const record=data.cases[Number(selector.value)],profile=record.profile;
+  if(!grades.has(record.caseId)) grades.set(record.caseId,new Map());
+  const caseGrades=grades.get(record.caseId);
+  detail.replaceChildren();
+  const panel=add(detail,'section');
+  add(panel,'h2','去标识画像');
+  add(panel,'p',[profile.major,profile.degree,profile.graduationYear?profile.graduationYear+' 届':'毕业届别未知'].join(' · '));
+  add(panel,'p','意向方向：'+(profile.directions.join('、')||'未填写'));
+  add(panel,'p','已完成课程：'+(profile.completedCourses.join('、')||'暂无'));
+  add(panel,'p','在修课程：'+(profile.inProgressCourses.join('、')||'暂无'));
+  add(panel,'p','课程接触技能：'+(profile.courseSkills.join('、')||'暂无'));
+  if(profile.evidence.length){
+    const list=add(panel,'ul');
+    for(const evidence of profile.evidence) add(list,'li',evidence.type+' · '+(evidence.confirmed?'已确认':'待核验')+' · '+evidence.skills.join('、'));
+  }else add(panel,'p','暂无可展示的成果技能。');
+  add(panel,'p','评测快照时间：'+record.asOf);
+  for(const candidate of record.candidates){
+    const card=add(detail,'article');
+    add(card,'h3',candidate.title+' · '+candidate.org);
+    add(card,'p',candidate.locations?.join('、')||'地点未公开');
+    const content=add(card,'details');
+    add(content,'summary','查看招聘原文');
+    add(content,'pre',candidate.jdText||'快照未收录原文。');
+    if(/^https?:\/\//i.test(candidate.postUrl)){
+      const link=add(content,'a','查看原始链接 ↗');
+      link.href=candidate.postUrl; link.target='_blank'; link.rel='noopener noreferrer';
+    }
+    const rating=add(add(card,'label','岗位相关性 '),'select');
+    gradeOptions.forEach((label,index)=>{add(rating,'option',label).value=index===0?'':String(index-1);});
+    rating.value=caseGrades.has(candidate.jobId)?String(caseGrades.get(candidate.jobId).grade):'';
+    const reasonPanel=add(card,'details');
+    reasonPanel.hidden=rating.value==='';
+    add(reasonPanel,'summary','核对重算的推荐理由');
+    add(reasonPanel,'p',candidate.reason);
+    const agreement=add(add(reasonPanel,'label','理由与证据一致 '),'select');
+    for(const [value,label] of [['','跳过 · 无法判断'],['yes','一致'],['no','不一致']]) add(agreement,'option',label).value=value;
+    const previous=caseGrades.get(candidate.jobId)?.explanationMatches;
+    agreement.value=previous==null?'':previous?'yes':'no';
+    rating.addEventListener('change',()=>{
+      if(rating.value===''){
+        caseGrades.delete(candidate.jobId);
+        agreement.value='';
+        reasonPanel.open=false;
+      }else caseGrades.set(candidate.jobId,{grade:Number(rating.value),explanationMatches:agreement.value===''?null:agreement.value==='yes'});
+      reasonPanel.hidden=rating.value==='';
+      updateProgress();
+    });
+    agreement.addEventListener('change',()=>{
+      if(rating.value!=='') caseGrades.set(candidate.jobId,{grade:Number(rating.value),explanationMatches:agreement.value===''?null:agreement.value==='yes'});
+    });
+  }
+}
+selector.addEventListener('change',()=>{ render(); updateProgress(); });
+resume.addEventListener('change',async()=>{
+  const file=resume.files[0];
+  if(!file) return;
+  resume.disabled=true;
+  try{
+    const batch=JSON.parse(await file.text());
+    if(!['format','catalogHash','matchVersion','taxonomyVersion'].every(key=>batch?.[key]===data[key])||!Array.isArray(batch.cases))
+      throw new Error('标注文件与本页的岗位快照或版本不一致。');
+    const next=new Map([...grades].map(([id,labels])=>[id,new Map(labels)]));
+    let count=0;
+    for(const item of batch.cases){
+      const allowed=allowedCandidates.get(item?.caseId);
+      if(!allowed||!item.labels||Array.isArray(item.labels)||typeof item.labels!=='object')
+        throw new Error('标注文件含有无法对应的案例。');
+      const labels=next.get(item.caseId)||new Map();
+      next.set(item.caseId,labels);
+      for(const [id,label] of Object.entries(item.labels)){
+        if(!allowed.has(id)||!Number.isInteger(label?.grade)||label.grade<0||label.grade>3||
+          (label.explanationMatches!=null&&typeof label.explanationMatches!=='boolean'))
+          throw new Error('标注文件含有无法对应的岗位或无效评分。');
+        const previous=labels.get(id),explanationMatches=label.explanationMatches??null;
+        if(previous){
+          if(previous.grade!==label.grade||previous.explanationMatches!==explanationMatches)
+            throw new Error('文件中的评分与当前页面冲突，请核对后再导入。');
+          continue;
+        }
+        labels.set(id,{grade:label.grade,explanationMatches});
+        count++;
+      }
+    }
+    for(const [id,labels] of next) grades.set(id,labels);
+    render();
+    updateProgress();
+    resumeStatus.textContent=count?'已导入 '+count+' 条标注。':'当前页面已包含这些标注。';
+  }catch(error){
+    resumeStatus.textContent=error instanceof SyntaxError?'无法读取标注文件，请选择下载的 JSON 文件。':error.message;
+  }finally{
+    resume.value='';
+    resume.disabled=false;
+  }
+});
+download.addEventListener('click',()=>{
+  const {format,catalogHash,matchVersion,taxonomyVersion}=data;
+  const cases=[...grades].filter(([,labels])=>labels.size).map(([caseId,labels])=>({caseId,labels:Object.fromEntries(labels)}));
+  const link=document.createElement('a');
+  const url=URL.createObjectURL(new Blob([JSON.stringify({format,catalogHash,matchVersion,taxonomyVersion,cases},null,2)],{type:'application/json'}));
+  link.href=url; link.download='course-compass-expert-labels.json'; link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+render();
+updateProgress();
+</script>
+</html>

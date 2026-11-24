@@ -1,0 +1,444 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Course Compass employment contract 1.3. The catalog contains public postings. The profile definition describes the local engine input.",
+  "$ref": "#/$defs/Catalog",
+  "$defs": {
+    "NonEmpty": { "type": "string", "minLength": 1 },
+    "StringList": { "type": "array", "items": { "$ref": "#/$defs/NonEmpty" } },
+    "DayOrInstant": {
+      "anyOf": [{ "type": "string", "format": "date" }, { "type": "string", "format": "date-time" }]
+    },
+    "OptionalDate": { "anyOf": [{ "$ref": "#/$defs/DayOrInstant" }, { "type": "null" }] },
+    "Url": { "type": "string", "format": "uri", "pattern": "^https?://" },
+    "Hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "Ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+    "OptionalRatio": { "anyOf": [{ "$ref": "#/$defs/Ratio" }, { "type": "null" }] },
+    "Degree": { "enum": ["associate", "bachelor", "master", "phd", null] },
+    "JobType": { "enum": ["intern", "campus", "social"] },
+    "SkillWeight": {
+      "type": "object",
+      "required": ["skillId", "weight"],
+      "properties": {
+        "skillId": { "$ref": "#/$defs/NonEmpty" },
+        "weight": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "Catalog": {
+      "type": "object",
+      "required": ["employmentSchemaVersion", "skills", "courses", "aliases", "jobs"],
+      "properties": {
+        "employmentSchemaVersion": { "const": "1.3" },
+        "skills": { "type": "array", "items": {
+          "type": "object", "required": ["id", "name"], "properties": {
+            "id": { "$ref": "#/$defs/NonEmpty" }, "name": { "$ref": "#/$defs/NonEmpty" }
+          }
+        } },
+        "courses": { "type": "array", "items": {
+          "type": "object", "required": ["id", "name"], "properties": {
+            "id": { "$ref": "#/$defs/NonEmpty" }, "name": { "$ref": "#/$defs/NonEmpty" }
+          }
+        } },
+        "aliases": { "type": "object" },
+        "jobs": { "type": "array", "items": { "$ref": "#/$defs/JobPosting" } },
+        "employmentCompetitions": {
+          "type": "array", "items": {
+            "type": "object", "additionalProperties": false, "required": ["number", "title", "submittedGrade", "notes", "links"],
+            "properties": {
+              "number": { "type": "integer", "minimum": 1 }, "title": { "$ref": "#/$defs/NonEmpty" },
+              "submittedGrade": { "enum": ["A", "B", null] }, "notes": { "type": ["string", "null"] },
+              "links": { "type": "array", "items": {
+                "type": "object", "additionalProperties": false, "required": ["label", "url"],
+                "properties": { "label": { "$ref": "#/$defs/NonEmpty" }, "url": { "$ref": "#/$defs/Url" } }
+              } }
+            }
+          }
+        },
+        "employmentLeads": {
+          "type": "object", "additionalProperties": false,
+          "required": ["sourceName", "sourceUrl", "reviewedDate", "items"],
+          "properties": {
+            "sourceName": { "$ref": "#/$defs/NonEmpty" },
+            "sourceUrl": { "$ref": "#/$defs/Url" },
+            "reviewedDate": { "type": "string", "format": "date" },
+            "items": { "type": "array", "items": {
+              "type": "object", "additionalProperties": false, "required": ["title", "url"],
+              "properties": {
+                "title": { "$ref": "#/$defs/NonEmpty" },
+                "url": { "$ref": "#/$defs/Url" },
+                "relatedSourceId": { "$ref": "#/$defs/NonEmpty" },
+                "observation": { "$ref": "#/$defs/NonEmpty" }
+              }
+            } }
+          }
+        },
+        "employmentSources": {
+          "type": "object", "additionalProperties": { "$ref": "#/$defs/SourceHealth" }
+        },
+        "campusCalendar": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "company", "projectType", "applyUrl"],
+            "properties": {
+              "id": { "$ref": "#/$defs/NonEmpty" },
+              "company": { "$ref": "#/$defs/NonEmpty" },
+              "sector": { "type": ["string", "null"] },
+              "projectType": { "$ref": "#/$defs/NonEmpty" },
+              "gradYear": { "type": ["integer", "null"] },
+              "tracks": { "type": "array", "items": { "type": "string" } },
+              "applyStart": { "type": ["string", "null"] },
+              "applyEnd": { "type": ["string", "null"] },
+              "cities": { "type": "array", "items": { "type": "string" } },
+              "applyUrl": { "$ref": "#/$defs/Url" },
+              "sourceUrl": { "type": ["string", "null"] },
+              "openJobs": { "type": ["integer", "null"] },
+              "asOf": { "type": ["string", "null"] },
+              "notes": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    },
+    "JobPosting": {
+      "type": "object",
+      "required": ["id", "schemaVersion", "title", "org", "category", "jobType", "locations", "majors", "skills", "hardGate", "jdText", "jdHash", "postUrl", "salary", "citation", "sourceSnapshot"],
+      "properties": {
+        "id": { "$ref": "#/$defs/NonEmpty" },
+        "schemaVersion": { "const": "1.3" },
+        "userImported": { "const": false },
+        "title": { "$ref": "#/$defs/NonEmpty" },
+        "org": { "$ref": "#/$defs/NonEmpty" },
+        "category": { "$ref": "#/$defs/NonEmpty" },
+        "jobType": { "$ref": "#/$defs/JobType" },
+        "locations": { "$ref": "#/$defs/StringList" },
+        "majors": { "$ref": "#/$defs/StringList" },
+        "skills": { "type": "array", "items": { "$ref": "#/$defs/SkillWeight" } },
+        "hardGate": { "$ref": "#/$defs/HardGate" },
+        "jdText": { "type": "string" },
+        "jdHash": { "anyOf": [{ "$ref": "#/$defs/Hash" }, { "type": "null" }] },
+        "jobFamilyId": { "type": ["string", "null"] },
+        "postUrl": { "$ref": "#/$defs/Url" },
+        "salary": { "anyOf": [{ "$ref": "#/$defs/Salary" }, { "type": "null" }] },
+        "snapshotDate": { "$ref": "#/$defs/OptionalDate" },
+        "citation": { "$ref": "#/$defs/Citation" },
+        "modelRequirements": { "$ref": "#/$defs/ModelRequirements" },
+        "sourceSnapshot": {
+          "allOf": [
+            { "$ref": "#/$defs/SourceSnapshot" },
+            { "type": "object", "required": ["sourceId", "snapshotAt"], "properties": {
+              "sourceId": { "$ref": "#/$defs/NonEmpty" }, "snapshotAt": { "$ref": "#/$defs/DayOrInstant" }
+            } }
+          ]
+        },
+        "industry": { "type": ["string", "null"] },
+        "companyType": { "type": ["string", "null"] },
+        "remote": { "type": ["boolean", "null"] },
+        "benefits": { "$ref": "#/$defs/StringList" },
+        "internshipPeriod": { "type": ["string", "null"] },
+        "companyIntro": { "type": ["string", "null"] }
+      }
+    },
+    "PublicJobSummary": {
+      "type": "object",
+      "required": ["id", "title", "org", "category", "industry", "locations", "jobType", "companyType", "minDegree",
+        "internshipPeriod", "benefits", "salary", "postedAt", "postUrl", "citation", "source", "skills", "directionId", "familyId"],
+      "properties": {
+        "id": { "$ref": "#/$defs/NonEmpty" }, "title": { "$ref": "#/$defs/NonEmpty" },
+        "org": { "$ref": "#/$defs/NonEmpty" }, "category": { "$ref": "#/$defs/NonEmpty" },
+        "industry": { "type": ["string","null"] }, "locations": { "$ref": "#/$defs/StringList" },
+        "jobType": { "$ref": "#/$defs/JobType" }, "companyType": { "type": ["string","null"] },
+        "minDegree": { "$ref": "#/$defs/Degree" }, "internshipPeriod": { "type": ["string","null"] },
+        "benefits": { "$ref": "#/$defs/StringList" }, "salary": { "anyOf": [{ "$ref": "#/$defs/Salary" }, { "type": "null" }] },
+        "postedAt": { "$ref": "#/$defs/OptionalDate" }, "postUrl": { "$ref": "#/$defs/Url" },
+        "citation": { "$ref": "#/$defs/Citation" }, "source": { "$ref": "#/$defs/SourceSnapshot" },
+        "skills": { "type":"array", "items": {
+          "type": "object", "required": ["id","name"], "additionalProperties": false,
+          "properties": { "id": { "$ref": "#/$defs/NonEmpty" }, "name": { "$ref": "#/$defs/NonEmpty" } }
+        } },
+        "directionId": { "type": ["string","null"] }, "familyId": { "type": ["string","null"] }
+      }
+    },
+    "PublicJobListResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["snapshot","asOf","total","limit","offset","items"],
+      "properties": {
+        "snapshot": { "$ref": "#/$defs/Hash" }, "asOf": { "type": "string", "format": "date-time" },
+        "total": { "type": "integer", "minimum": 0 }, "limit": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "offset": { "type": "integer", "minimum": 0 },
+        "items": { "type": "array", "maxItems": 100, "items": { "$ref": "#/$defs/PublicJobSummary" } }
+      }
+    },
+    "PublicJobDetailResponse": {
+      "type": "object", "additionalProperties": false, "required": ["snapshot","asOf","job"],
+      "properties": {
+        "snapshot": { "$ref": "#/$defs/Hash" }, "asOf": { "type": "string", "format": "date-time" },
+        "job": { "allOf": [{ "$ref": "#/$defs/PublicJobSummary" }, {
+          "type": "object", "required": ["hardGate","jdText","requirements","facts","companyIntro"],
+          "properties": {
+            "hardGate": { "$ref": "#/$defs/HardGate" }, "jdText": { "type": "string" },
+            "requirements": { "type": "array", "items": { "$ref": "#/$defs/JobRequirement" } },
+            "facts": { "type": "object", "additionalProperties": { "type": "array", "items": { "$ref": "#/$defs/JdFact" } } },
+            "companyIntro": { "type": ["string","null"] }
+          }
+        }] }
+      }
+    },
+    "MatchQueryProfile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["major","graduationYear","degree","completedCourseIds","inProgressCourseIds","completedCourseSkillIds",
+        "inProgressCourseSkillIds","evidences","preferences","personalized","gpaPercent","rank"],
+      "properties": {
+        "major": { "enum": ["cs","econ","mat_mech","chinese",null] },
+        "graduationYear": { "type": ["integer","null"], "minimum": 2000, "maximum": 2099 },
+        "degree": { "$ref": "#/$defs/Degree" }, "personalized": { "type": "boolean" },
+        "gpaPercent": { "type": ["number","null"], "minimum": 0, "maximum": 100 },
+        "rank": { "type": ["object","null"], "additionalProperties": false, "required": ["position","total"], "properties": {
+          "position": { "type":"integer","minimum":1 }, "total": { "type":"integer","minimum":1 }
+        } },
+        "completedCourseIds": { "$ref": "#/$defs/MatchIdList" }, "inProgressCourseIds": { "$ref": "#/$defs/MatchIdList" },
+        "completedCourseSkillIds": { "$ref": "#/$defs/MatchIdList" }, "inProgressCourseSkillIds": { "$ref": "#/$defs/MatchIdList" },
+        "evidences": { "type":"array", "maxItems":100, "items": {
+          "type":"object", "additionalProperties":false, "required":["skillIds","verificationStatus","type","hasPortfolio","quality","observedAt"],
+          "properties":{
+            "skillIds": { "$ref":"#/$defs/MatchIdList" },
+            "verificationStatus": { "enum":["unverified","user_confirmed","system_verified","reviewer_verified"] },
+            "type": { "enum":["实习","项目","竞赛","科研","课设","成果"] }, "hasPortfolio": { "type":"boolean" },
+            "quality": { "$ref":"#/$defs/Ratio" }, "observedAt": { "$ref":"#/$defs/OptionalDate" }
+          }
+        } },
+        "preferences": { "type":"object", "additionalProperties":false,
+          "required":["primaryDirectionId","secondaryDirectionIds","excludedDirectionIds","jobTypes","cities","salaryMin"],
+          "properties": {
+            "primaryDirectionId": { "type":["string","null"], "maxLength":80 },
+            "secondaryDirectionIds": { "$ref":"#/$defs/MatchIdList" },
+            "excludedDirectionIds": { "$ref":"#/$defs/MatchIdList" },
+            "jobTypes": { "type":"array", "uniqueItems":true, "maxItems":3, "items": { "$ref":"#/$defs/JobType" } },
+            "cities": { "$ref":"#/$defs/MatchIdList" },
+            "salaryMin": { "type":["number","null"], "exclusiveMinimum":0 }
+          }
+        }
+      }
+    },
+    "MatchIdList": {
+      "type":"array", "maxItems":150, "uniqueItems":true, "items":{"type":"string","minLength":1,"maxLength":80}
+    },
+    "MatchQuery": {
+      "type":"object", "additionalProperties":false, "required":["profile","snapshot"],
+      "properties": {
+        "profile":{"$ref":"#/$defs/MatchQueryProfile"}, "snapshot":{"$ref":"#/$defs/Hash"},
+        "jobIds":{"allOf":[{"$ref":"#/$defs/MatchIdList"},{"type":"array","minItems":1,"maxItems":100}]},
+        "limit":{"type":"integer","minimum":1,"maximum":100}
+      }
+    },
+    "GrowthResearchQuery": {
+      "type":"object", "additionalProperties":false, "required":["profile","snapshot","jobIds"],
+      "properties":{
+        "profile":{"$ref":"#/$defs/MatchQueryProfile"}, "snapshot":{"$ref":"#/$defs/Hash"},
+        "jobIds":{"allOf":[{"$ref":"#/$defs/MatchIdList"},{"type":"array","minItems":1,"maxItems":8}]},
+        "focus":{"type":"string","minLength":1,"maxLength":80},
+        "weeklyHours":{"type":"number","exclusiveMinimum":0,"maximum":168}
+      }
+    },
+    "MatchQueryResponse": {
+      "type":"object", "additionalProperties":false, "required":["snapshot","asOf","total","items"],
+      "properties":{
+        "snapshot":{"$ref":"#/$defs/Hash"},"asOf":{"type":"string","format":"date-time"},
+        "total":{"type":"integer","minimum":0},
+        "items":{"type":"array","maxItems":100,"items":{"$ref":"#/$defs/MatchResult"}}
+      }
+    },
+    "HardGate": {
+      "type": "object",
+      "properties": {
+        "graduationYears": { "type": "array", "items": { "type": "integer", "minimum": 2000, "maximum": 2099 } },
+        "minDegree": { "$ref": "#/$defs/Degree" },
+        "degreeUnrestricted": { "type": "boolean" },
+        "minGpaPercent": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "maxRankPercent": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "englishRequirement": { "type": ["string", "null"] },
+        "otherGates": { "$ref": "#/$defs/StringList" }
+      }
+    },
+    "Citation": {
+      "type": "object", "required": ["sourceName", "sourceUrl", "trustTier"],
+      "properties": {
+        "sourceName": { "$ref": "#/$defs/NonEmpty" },
+        "sourceUrl": { "$ref": "#/$defs/Url" },
+        "trustTier": { "enum": ["A_OFFICIAL", "B_EXPERIENCE", "C_UNVERIFIED"] },
+        "publishDate": { "$ref": "#/$defs/OptionalDate" },
+        "verifiedDate": { "$ref": "#/$defs/OptionalDate" }
+      }
+    },
+    "SourceSnapshot": {
+      "type": "object", "required": ["sourceId", "snapshotAt", "status", "linkScope"],
+      "properties": {
+        "sourceId": { "type": ["string", "null"] }, "sourceJobId": { "$ref": "#/$defs/NonEmpty" },
+        "via": { "$ref": "#/$defs/NonEmpty" }, "revision": { "type": "integer", "minimum": 1 },
+        "linkScope": { "enum": ["job_detail", "project_page", "job_list", "company_career_home", "school_notice", "aggregator_page", "unknown"] },
+        "status": { "enum": ["confirmed_active", "observed_active", "unknown", "stale", "expired", "closed", "archived"] },
+        "snapshotAt": { "$ref": "#/$defs/OptionalDate" }, "firstSeenAt": { "$ref": "#/$defs/OptionalDate" },
+        "lastSeenAt": { "$ref": "#/$defs/OptionalDate" }, "sourceLastOkAt": { "$ref": "#/$defs/OptionalDate" },
+        "textObservedAt": { "$ref": "#/$defs/OptionalDate" }, "applyEndAt": { "$ref": "#/$defs/OptionalDate" },
+        "closedAt": { "$ref": "#/$defs/OptionalDate" },
+        "applyUrl": { "$ref": "#/$defs/Url" }
+      }
+    },
+    "SourceHealth": {
+      "type": "object", "required": ["name", "careersUrl", "lastAttemptAt", "status"],
+      "properties": {
+        "name": { "$ref": "#/$defs/NonEmpty" }, "careersUrl": { "$ref": "#/$defs/Url" },
+        "lastAttemptAt": { "$ref": "#/$defs/DayOrInstant" }, "lastSuccessAt": { "$ref": "#/$defs/OptionalDate" },
+        "status": { "enum": ["ok", "partial", "failed"] },
+        "lastError": { "type": ["string", "null"] }, "observedCount": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "Salary": {
+      "type": "object",
+      "required": ["min", "max", "unit", "months", "raw", "sourceSpan", "monthlyMin", "monthlyMax"],
+      "properties": {
+        "min": { "type": "number", "minimum": 0 }, "max": { "type": "number", "minimum": 0 },
+        "monthlyMin": { "type": "number", "minimum": 0 }, "monthlyMax": { "type": "number", "minimum": 0 },
+        "unit": { "enum": ["day", "month", "year"] }, "months": { "type": ["integer", "null"], "minimum": 1 },
+        "raw": { "$ref": "#/$defs/NonEmpty" }, "sourceSpan": { "$ref": "#/$defs/NonEmpty" }
+      }
+    },
+    "EmploymentProfile": {
+      "type": "object",
+      "required": ["schemaVersion", "major", "majorRaw", "degree", "graduationDate", "graduationYear", "graduationDateSource", "gpaPercent", "rank", "completedCourseIds", "inProgressCourseIds", "completedCourseSkillIds", "inProgressCourseSkillIds", "evidences", "preferences", "personalized", "weeklyHours"],
+      "properties": {
+        "schemaVersion": { "const": "1.3" }, "major": { "enum": ["cs", "econ", "mat_mech", "chinese", null] },
+        "majorRaw": { "type": "string" }, "degree": { "$ref": "#/$defs/Degree" },
+        "graduationDate": { "type": ["string", "null"], "pattern": "^20[0-9]{2}-(0[1-9]|1[0-2])$" },
+        "graduationYear": { "type": ["integer", "null"], "minimum": 2000, "maximum": 2099 },
+        "graduationDateSource": { "type": ["string", "null"] },
+        "gpaPercent": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "rank": { "type": ["object", "null"], "required": ["position", "total"],
+          "properties": { "position": { "type": "integer", "minimum": 1 }, "total": { "type": "integer", "minimum": 1 } } },
+        "completedCourseIds": { "$ref": "#/$defs/StringList" }, "inProgressCourseIds": { "$ref": "#/$defs/StringList" },
+        "completedCourseSkillIds": { "$ref": "#/$defs/StringList" }, "inProgressCourseSkillIds": { "$ref": "#/$defs/StringList" },
+        "evidences": { "type": "array", "items": { "$ref": "#/$defs/Evidence" } },
+        "preferences": {
+          "type": "object", "properties": {
+            "primaryDirectionId": { "type": ["string", "null"] },
+            "secondaryDirectionIds": { "$ref": "#/$defs/StringList" }, "excludedDirectionIds": { "$ref": "#/$defs/StringList" },
+            "cities": { "$ref": "#/$defs/StringList" }, "jobTypes": { "type": "array", "items": { "$ref": "#/$defs/JobType" } },
+            "salaryMin": { "type": ["number", "null"], "minimum": 0 }
+          }
+        },
+        "personalized": { "type": "boolean" }, "weeklyHours": { "type": "number", "exclusiveMinimum": 0 },
+        "intendedPaths": { "$ref": "#/$defs/StringList" }, "targetReqIds": { "$ref": "#/$defs/StringList" },
+        "isStudentCadre": { "type": "boolean" }
+      }
+    },
+    "Evidence": {
+      "type": "object", "required": ["id", "title", "description", "skillIds"],
+      "properties": {
+        "id": { "$ref": "#/$defs/NonEmpty" }, "title": { "$ref": "#/$defs/NonEmpty" },
+        "description": { "type": "string" }, "skillIds": { "$ref": "#/$defs/StringList" },
+        "verificationStatus": { "enum": ["unverified", "user_confirmed", "system_verified", "reviewer_verified", "rejected"] },
+        "observedAt": { "$ref": "#/$defs/OptionalDate" }, "verified": { "type": "boolean" }
+      }
+    },
+    "JobRequirement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "type", "skillId", "textSpan", "importance", "hardGate", "sourceOffset", "parser", "reviewStatus"],
+      "properties": {
+        "id": { "$ref": "#/$defs/NonEmpty" }, "type": { "const": "skill" }, "skillId": { "$ref": "#/$defs/NonEmpty" },
+        "textSpan": { "$ref": "#/$defs/NonEmpty" }, "importance": { "enum": ["required", "preferred", "contextual"] },
+        "hardGate": { "const": false },
+        "sourceOffset": { "type": "array", "items": { "type": "integer", "minimum": 0 }, "minItems": 2, "maxItems": 2 },
+        "parser": { "enum": ["rules", "local_model"] }, "reviewStatus": { "enum": ["unreviewed", "verified", "rejected"] },
+        "confidence": { "$ref": "#/$defs/Ratio" }
+      },
+      "if": { "properties": { "parser": { "const": "local_model" } } },
+      "then": { "required": ["confidence"], "properties": { "confidence": {} } }
+    },
+    "JdFact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourceSpan", "sourceOffset", "parser"],
+      "properties": {
+        "sourceSpan": { "$ref": "#/$defs/NonEmpty" },
+        "sourceOffset": { "type": "array", "items": { "type": "integer", "minimum": 0 }, "minItems": 2, "maxItems": 2 },
+        "parser": { "const": "rules" }
+      }
+    },
+    "ModelRequirements": {
+      "type": "object", "additionalProperties": false,
+      "required": ["jdHash", "taxonomyVersion", "promptVersion", "modelDigest", "items"],
+      "properties": {
+        "jdHash": { "$ref": "#/$defs/Hash" }, "modelDigest": { "$ref": "#/$defs/Hash" },
+        "taxonomyVersion": { "$ref": "#/$defs/NonEmpty" }, "promptVersion": { "$ref": "#/$defs/NonEmpty" },
+        "items": { "type": "array", "minItems": 1, "maxItems": 5, "items": {
+          "type": "object", "additionalProperties": false,
+          "required": ["skillId", "textSpan", "importance", "confidence", "sourceOffset"],
+          "properties": {
+            "skillId": { "$ref": "#/$defs/NonEmpty" }, "textSpan": { "$ref": "#/$defs/NonEmpty" },
+            "importance": { "enum": ["required", "preferred", "contextual"] }, "confidence": { "$ref": "#/$defs/Ratio" },
+            "sourceOffset": { "type": "array", "items": { "type": "integer", "minimum": 0 }, "minItems": 2, "maxItems": 2 }
+          }
+        } }
+      }
+    },
+    "EligibilityCheck": {
+      "type": "object", "required": ["key", "label", "status"],
+      "properties": {
+        "key": { "$ref": "#/$defs/NonEmpty" }, "label": { "$ref": "#/$defs/NonEmpty" },
+        "status": { "enum": ["PASS", "FAIL", "UNKNOWN"] }
+      }
+    },
+    "MatchResult": {
+      "type": "object",
+      "required": ["req", "schemaVersion", "matchVersion", "calculatedAt", "eligibility", "matchScore", "confidence", "factors", "freshness", "majorAlignment", "projectRelevance", "evidenceRefs", "missingCount", "weightedCoverage", "coveredSkillIds", "missingSkillIds", "tier", "tierReason"],
+      "properties": {
+        "req": {
+          "type": "object", "required": ["id", "kind", "title", "skills"],
+          "properties": {
+            "id": { "$ref": "#/$defs/NonEmpty" }, "kind": { "enum": ["job", "competition"] },
+            "title": { "$ref": "#/$defs/NonEmpty" },
+            "skills": { "type": "array", "items": { "$ref": "#/$defs/SkillWeight" } }
+          }
+        },
+        "schemaVersion": { "const": "1.3" },
+        "matchVersion": { "type": "string", "pattern": "^match-[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "calculatedAt": { "type": "string", "format": "date-time" },
+        "eligibility": {
+          "type": "object", "required": ["status", "checks", "failed", "pending"],
+          "properties": {
+            "status": { "enum": ["PASS", "FAIL", "UNKNOWN"] },
+            "checks": { "type": "array", "items": { "$ref": "#/$defs/EligibilityCheck" } },
+            "failed": { "type": "array", "items": { "$ref": "#/$defs/EligibilityCheck" } },
+            "pending": { "type": "array", "items": { "$ref": "#/$defs/EligibilityCheck" } }
+          }
+        },
+        "matchScore": { "type": ["integer", "null"], "minimum": 0, "maximum": 100 },
+        "confidence": { "$ref": "#/$defs/Ratio" },
+        "factors": {
+          "type": "object", "required": ["skills", "project", "internship", "direction", "location", "jobType", "salary", "portfolio"],
+          "additionalProperties": { "$ref": "#/$defs/OptionalRatio" },
+          "properties": {
+            "skills": { "$ref": "#/$defs/OptionalRatio" }, "project": { "$ref": "#/$defs/OptionalRatio" },
+            "internship": { "$ref": "#/$defs/OptionalRatio" }, "direction": { "$ref": "#/$defs/OptionalRatio" },
+            "location": { "$ref": "#/$defs/OptionalRatio" }, "jobType": { "$ref": "#/$defs/OptionalRatio" },
+            "salary": { "$ref": "#/$defs/OptionalRatio" }, "portfolio": { "$ref": "#/$defs/OptionalRatio" }
+          }
+        },
+        "freshness": {
+          "allOf": [
+            { "$ref": "#/$defs/SourceSnapshot" },
+            { "type": "object", "required": ["label", "ended", "ageDays", "score"],
+              "properties": { "label": { "$ref": "#/$defs/NonEmpty" }, "ended": { "type": "boolean" },
+                "ageDays": { "type": ["number", "null"], "minimum": 0 }, "score": { "$ref": "#/$defs/Ratio" } } }
+          ]
+        },
+        "majorAlignment": {
+          "type": "object", "required": ["level", "score"],
+          "properties": { "level": { "$ref": "#/$defs/NonEmpty" }, "score": { "$ref": "#/$defs/OptionalRatio" } }
+        },
+        "projectRelevance": { "$ref": "#/$defs/OptionalRatio" }, "weightedCoverage": { "$ref": "#/$defs/Ratio" },
+        "missingCount": { "type": "integer", "minimum": 0 }, "evidenceRefs": { "$ref": "#/$defs/StringList" },
+        "coveredSkillIds": { "$ref": "#/$defs/StringList" }, "missingSkillIds": { "$ref": "#/$defs/StringList" },
+        "tier": { "enum": ["priority", "worth", "challenge"] }, "tierReason": { "$ref": "#/$defs/NonEmpty" }
+      }
+    }
+  }
+}

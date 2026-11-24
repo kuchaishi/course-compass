@@ -1,0 +1,128 @@
+{
+  "taxonomyVersion": "2026.11.2",
+  "scope": "开发用人工原文复核样本。只标注现有词表中的技能，岗位职责或团队背景中的提及归为 contextual。并列示例未明确要求逐项掌握时保留为 contextual。明确要求目前无词表条目的能力列在备注中，供后续扩充词表参考。",
+  "cases": [
+    {
+      "jobId": "jr_iucl9m",
+      "jdHash": "1f94db17fdd129dd95fe3ec932e4f315693bcded31e169e75d5a4c0b61600cb8",
+      "notes": "Java 和 C/C++ 等是至少熟练一门编程语言的备选。普通 C/C++ 不等同嵌入式开发。分布式系统和指定组件当前无直接条目。",
+      "requirements": [
+        {"skillId":"data_structures","importance":"required","textSpan":"熟悉数据结构、算法、操作系统、计算机网络及数据库原理"},
+        {"skillId":"algorithms","importance":"required","textSpan":"熟悉数据结构、算法、操作系统、计算机网络及数据库原理"},
+        {"skillId":"os","importance":"required","textSpan":"熟悉数据结构、算法、操作系统、计算机网络及数据库原理"},
+        {"skillId":"computer_networks","importance":"required","textSpan":"熟悉数据结构、算法、操作系统、计算机网络及数据库原理"},
+        {"skillId":"programming_basics","importance":"required","textSpan":"熟练掌握至少一门编程语言，如Java、C#、Go、C/C++等"},
+        {"skillId":"java","importance":"contextual","textSpan":"如Java、C#、Go、C/C++等"},
+        {"skillId":"teamwork_comm","importance":"contextual","textSpan":"与业务研发团队协作"}
+      ]
+    },
+    {
+      "jobId": "jr_n72257",
+      "jdHash": "47c2e608a22116e60de8ea846e64c45bc1a5a7cdbc53fb7774805249a83aec27",
+      "notes": "编程基础与脚本经验的加分条件分开。芯片物理实现与版图流程当前无直接条目。",
+      "requirements": [
+        {"skillId":"analog_digital","importance":"required","textSpan":"掌握数字电路、半导体器件物理等基础知识"},
+        {"skillId":"programming_basics","importance":"required","textSpan":"具备一定的编程基础（Python / Tcl / Perl / Shell 等）"},
+        {"skillId":"python","importance":"contextual","textSpan":"Python / Tcl / Perl / Shell 等"},
+        {"skillId":"linux_deploy","importance":"required","textSpan":"熟悉 Linux 开发环境"},
+        {"skillId":"teamwork_comm","importance":"required","textSpan":"具备良好的沟通协作能力与团队合作精神"}
+      ]
+    },
+    {
+      "jobId": "jr_1jpk294",
+      "jdHash": "0d689d2f63068f15ebcc149fd566b0ef16679ba87896ab987f0cf2402470a2e9",
+      "notes": "市场营销背景优先，了解市场营销业务逻辑是明示要求。对机器学习算法的了解属于机器学习，原文没要求算法设计。",
+      "requirements": [
+        {"skillId":"sql_rdbms","importance":"required","textSpan":"熟练掌握SQL，可独立完成复杂数据查询、提取与处理"},
+        {"skillId":"data_analysis","importance":"required","textSpan":"熟练掌握常用数据分析、数据挖掘逻辑"},
+        {"skillId":"statistics","importance":"required","textSpan":"能够结合统计模型、营销逻辑落地专业化数据分析工作"},
+        {"skillId":"marketing","importance":"required","textSpan":"了解互联网用户运营、市场营销业务逻辑"},
+        {"skillId":"ml_basics","importance":"preferred","textSpan":"了解机器学习算法者优先"}
+      ]
+    },
+    {
+      "jobId": "jr_1r3pnsa",
+      "jdHash": "816c911508786deceb558a7db9543a1cd1fe595d7ac35c0db370b1ff1628d5f3",
+      "notes": "CET-6 是和日语能力并列的备选门槛。AI 产品使用不等同大模型应用开发。",
+      "requirements": [
+        {"skillId":"sql_rdbms","importance":"required","textSpan":"熟练掌握 SQL，具备独立的数据查询与分析能力"},
+        {"skillId":"data_analysis","importance":"required","textSpan":"具备独立的数据查询与分析能力"},
+        {"skillId":"teamwork_comm","importance":"required","textSpan":"具备良好的跨团队沟通协作能力"},
+        {"skillId":"english_cet6","importance":"contextual","textSpan":"英语：CET-6 通过，560分及以上者优先"}
+      ]
+    },
+    {
+      "jobId": "jr_1vqkq64",
+      "jdHash": "e4681ebd8e0eb71179c956306000a2ad144f309d2e8c2212791f59d2050f1cb8",
+      "notes": "结构测试不等同软件测试。装配公差、BOM、IP/FCC 与 DFMEA 没有直接对应的词表条目。",
+      "requirements": [
+        {"skillId":"solidworks","importance":"required","textSpan":"熟练使用 SolidWorks/Creo 进行三维建模与工程图绘制"},
+        {"skillId":"cad_drawing","importance":"required","textSpan":"熟练使用 SolidWorks/Creo 进行三维建模与工程图绘制"},
+        {"skillId":"process_engineering","importance":"required","textSpan":"熟悉钣金、铝合金机加工、压铸、PC/ABS 塑料壳体等常用材料与加工工艺"},
+        {"skillId":"teamwork_comm","importance":"required","textSpan":"具备良好跨部门沟通能力"}
+      ]
+    },
+    {
+      "jobId": "jr_1j3jzw4",
+      "jdHash": "13e0febf1494123aa08e4517b2f496c29b7ec537e4b0b2ac38551da603960be2",
+      "notes": "Figma 和 UX 有明确要求，当前词表无对应条目。设计工具语境下的 AI 指 Adobe Illustrator。",
+      "requirements": [
+        {"skillId":"copywriting","importance":"contextual","textSpan":"效果设计师、内容文案专家与本地化经理"},
+        {"skillId":"teamwork_comm","importance":"required","textSpan":"具备主动学习、沟通协作能力"},
+        {"skillId":"logic_expression","importance":"required","textSpan":"有良好的逻辑思维能力"}
+      ]
+    },
+    {
+      "jobId": "jr_hlq57",
+      "jdHash": "c3a8f8538ddca674ee9784e59dac51f0112436a5eef15ac675a8f91ba80aa8a3",
+      "notes": "职位要求熟练操作 Office，未要求 Excel 高级分析或办公自动化。GCP 与定量药理是词表未覆盖方向。",
+      "requirements": [
+        {"skillId":"english_cet6","importance":"required","textSpan":"英文6级以上，英语听说读写流利"},
+        {"skillId":"teamwork_comm","importance":"required","textSpan":"具备优秀的沟通表达和逻辑分析能力"},
+        {"skillId":"logic_expression","importance":"required","textSpan":"具备优秀的沟通表达和逻辑分析能力"}
+      ]
+    },
+    {
+      "jobId": "jr_lsbshg",
+      "jdHash": "ccf3540cfbce8b1e4255e0025be5c99cb42e221799dfcc7b38847a1115d5857b",
+      "notes": "审计资料只是归档对象。Office 使用是明确要求，未要求 Excel 高级操作。",
+      "requirements": [
+        {"skillId":"financial_accounting","importance":"required","textSpan":"熟悉基础财务知识，了解会计凭证、票据等基础财务资料"},
+        {"skillId":"audit_basics","importance":"contextual","textSpan":"财务报表、合同、票据、审计资料等财务档案"}
+      ]
+    },
+    {
+      "jobId": "jr_174h6aq",
+      "jdHash": "50d57adeeffb06bb7823a3fec2c73e63ac4848e6f5cf2ef3e97dc24ca2dfa94c",
+      "notes": "市场营销是相关专业偏好与工作领域。对项目管理感兴趣和优先考虑相关经历是同一段中不同程度的表述。",
+      "requirements": [
+        {"skillId":"data_analysis","importance":"contextual","textSpan":"具备基础的数据整理、台账维护及文档撰写能力"},
+        {"skillId":"marketing","importance":"contextual","textSpan":"配合部门品牌传播与市场营销计划"},
+        {"skillId":"project_mgmt","importance":"preferred","textSpan":"有会展、市场活动、采购或项目运营相关实习经验者优先"},
+        {"skillId":"teamwork_comm","importance":"required","textSpan":"具备良好的沟通协调和问题解决能力"}
+      ]
+    },
+    {
+      "jobId": "sr_continental_744000132360769",
+      "jdHash": "f3567d7766c57823121d730c5e3067ed9ff85eada06bfd593bbb9aa8a76bed70",
+      "notes": "英语口语与写作有明示要求，未要求六级、雅思或托福。轮胎知识与测试协调当前无直接条目。",
+      "requirements": []
+    },
+    {
+      "jobId": "sr_boschgroup_744000160787218",
+      "jdHash": "cc0a099eeebaf2f8fe94ce09dbd441249aaa7fad7905f6e7cb81bc7f4b66ce3c",
+      "notes": "资格区保留了招聘模板占位符和隐私条款。项目介绍中的技术为工作内容，没有明示为候选人条件。",
+      "requirements": []
+    },
+    {
+      "jobId": "tx_1282032033786619904",
+      "jdHash": "c8d824d05badfc6c9b1a58a344636a4b79835dbfd73762538087a07ca3a69ed7",
+      "notes": "游戏策划能力目前无词表条目。使用 AI 工具是加分项，原文未要求大模型应用开发。",
+      "requirements": [
+        {"skillId":"teamwork_comm","importance":"required","textSpan":"具备优秀的学习能力、沟通能力、逻辑思维和团队协作能力"},
+        {"skillId":"logic_expression","importance":"required","textSpan":"沟通能力、逻辑思维和团队协作能力，能将创意转化为清晰的策划案"},
+        {"skillId":"programming_basics","importance":"contextual","textSpan":"具备良好的审美和程序设计思维"}
+      ]
+    }
+  ]
+}

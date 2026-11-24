@@ -1,0 +1,8 @@
+/node_modules/
+/_research/
+.env
+.env.local
+.env.*.local
+*.bak.json
+*.prenullfix.*
+_fetch.log

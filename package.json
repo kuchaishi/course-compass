@@ -1,0 +1,14 @@
+{
+  "name": "course-compass",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "engines": { "node": ">=22.5.0" },
+  "scripts": {
+    "check:employment": "node _smoke.mjs && node _employment-contract-test.mjs && node _employment-eval.mjs --self-test && node _build-inline.mjs --check && node _employment-e2e.mjs"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "playwright": "1.65.1"
+  }
+}
