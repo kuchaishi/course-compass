@@ -5119,6 +5119,12 @@ async function ccDirectBrowserCloudCall(endpoint,payload,cloudCfg,{onDelta,onDon
     onDone({model,latencyMs,result:{framing:pick('项目化定位').join(' '),bullets:pick('有据简历要点'),gaps:pick('强化动作'),insight:pick('求职提示').join(' ')}});
   }
 }
+function ccEnsureLlmProbe(){
+  if(location.protocol==='file:'){ ccLlmState.probed=true; ccLlmState.enabled=false; return; }
+  if(ccLlmState.probed||ccLlmState.inFlight) return;
+  ccLlmState.checking=true;
+  setTimeout(()=>void ccProbeLlmStatus(),0);
+}
 async function ccProbeLlmStatus(force=false){
   if(location.protocol==='file:'){
     ccLlmState.probed=true;
@@ -8284,6 +8290,7 @@ function renderJobs(){
   const CC=window.CC,j=state.jobs;
   const cp=ccLiveProfile();
   if(!state.profile.saved&&!j.quickExplore) return jobsGateHTML();
+  ccEnsureLlmProbe();
   if(j.openJobId){
     const req=CC.REQ_BY_ID.get(j.openJobId);
     const m=req&&CC.forwardMatch(cp,[req]).all[0];

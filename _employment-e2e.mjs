@@ -256,17 +256,24 @@ try {
   await cards.first().waitFor();
   assert.ok((await savedState()).profile.saved, 'Loading a persona should persist the profile');
 
-  await page.locator('.cc-employment-nav [data-mode="leads"]').click();
+  await page.locator('.cc-employment-nav [data-mode="list"]').click();
+  const leadSection=page.locator('details[aria-label="手动岗位线索"]');
   const leads=page.locator('#cc-lead-form'), leadInput=leads.getByRole('textbox');
-  assert.ok(await page.getByRole('heading',{name:'岗位线索',exact:true}).isVisible());
-  assert.equal(await page.getByRole('link',{name:'打开网址',exact:false}).count(),3);
-  const puduLead=page.locator('.cc-section li').filter({hasText:'普渡机器人'});
+  const openLeadSection=async()=>{
+    if(!await leadSection.count()) await page.locator('[data-action="cc-live-panel"]').first().click();
+    await page.locator('#cc-warehouse-form button[type="submit"]:not([disabled])').waitFor();
+    if(!await leadSection.evaluate(node=>node.open)) await leadSection.locator('summary').click();
+  };
+  await openLeadSection();
+  assert.ok(await leadSection.getByText('分享的招聘线索',{exact:true}).isVisible());
+  assert.equal(await leadSection.getByRole('link',{name:'打开网址',exact:false}).count(),3);
+  const puduLead=leadSection.locator('li').filter({hasText:'普渡机器人'});
   await puduLead.getByRole('button',{name:'查看该企业的岗位快照',exact:false}).click();
   await cards.first().waitFor();
   assert.equal((await savedState()).jobs.filters.company,'普渡机器人');
   assert.ok(await cards.filter({hasText:'多模态深度学习算法实习生'}).first().isVisible());
   assert.ok((await cards.allTextContents()).every(text=>text.includes('普渡机器人')));
-  await page.locator('.cc-employment-nav [data-mode="leads"]').click();
+  await openLeadSection();
   await leadInput.fill('招聘岗位\t网址\n测试岗位\thttps://example.com/job\n错误岗位\tjavascript:alert(1)');
   await leads.getByRole('button',{name:'添加到本机'}).click();
   assert.equal((await savedState()).jobs.personalLeads,undefined);
@@ -274,10 +281,11 @@ try {
   await leads.getByRole('button',{name:'添加到本机'}).click();
   assert.equal((await savedState()).jobs.personalLeads.length,1);
   await page.reload();
+  await openLeadSection();
   assert.ok(await page.getByText('测试岗位',{exact:true}).isVisible());
   await page.getByRole('button',{name:'移除',exact:true}).click();
   assert.equal((await savedState()).jobs.personalLeads.length,0);
-  await page.locator('.cc-employment-nav [data-mode="list"]').click();
+  await page.locator('[data-action="cc-live-panel"]').first().click();
   await page.locator('[data-action="cc-reset-filters"]').first().click();
   await page.locator('.cc-employment-nav [data-mode="home"]').click();
 
@@ -462,10 +470,15 @@ try {
     assert.ok(await comparison.locator('q').filter({hasText:/暂无法提供转正机会/}).isVisible());
     assert.ok(await comparison.getByText('暂无可引用原句',{exact:true}).first().isVisible());
   } finally { await offerPage.close(); }
-  await page.locator('.cc-employment-nav [data-mode="company"]').click();
-  await page.locator('.cc-company-card').first().waitFor();
-  await page.locator('.cc-company-card [data-action="cc-company"]').first().click();
-  assert.notEqual((await savedState()).jobs.filters.company,'all');
+  const companyDetails=page.locator('details.cc-more-filters');
+  const companyFilter=companyDetails.locator('select[data-cc-filter="company"]');
+  if(!await companyDetails.evaluate(node=>node.open)) await companyDetails.locator('summary').click();
+  const companyChoice=await companyFilter.locator('option:not([value="all"])').first().getAttribute('value');
+  await companyFilter.selectOption(companyChoice);
+  assert.equal((await savedState()).jobs.filters.company,companyChoice);
+  assert.ok(await page.locator('.cc-job-card').first().isVisible());
+  await page.locator('[data-action="cc-reset-filters"]').first().click();
+  assert.equal((await savedState()).jobs.filters.company,'all');
   await page.locator('.cc-employment-nav [data-mode="home"]').click();
   const familyId='backend',directionId='software';
   await page.getByRole('button',{name:'探索其他方向',exact:true}).click();
@@ -510,7 +523,7 @@ try {
     await direct.waitForURL('**/#jobs/family/circuits');
     await direct.getByRole('heading',{name:'硬件开发 / 电路设计',exact:true}).waitFor();
     assert.ok((await scopeOf(direct.locator('.cc-job-card'))).every(item=>item.id==='circuits'));
-    await direct.getByRole('button',{name:/^模拟IC设计工程师/}).click();
+    await direct.locator('.cc-job-card[data-job-id="jr_1jjue1m"]').getByRole('button',{name:/模拟IC设计工程师/}).click();
     await direct.waitForURL('**/#jobs/family/circuits/job/jr_1jjue1m');
     await direct.getByRole('button',{name:/查看硬件开发 \/ 电路设计岗位/}).click();
     await direct.waitForURL('**/#jobs/family/circuits');
@@ -538,7 +551,7 @@ try {
   const featured=page.getByRole('region',{name:'首页推荐岗位'}).locator('.cc-job-card');
   await featured.first().waitFor();
   assert.ok((await scopeOf(featured)).every(item=>item.directionId===directionId));
-  await page.getByRole('button',{name:'查看全部岗位',exact:false}).click();
+  await page.locator('[data-action="cc-all-jobs"]').first().click();
   assert.equal((await savedState()).jobs.filters.direction,'all');
   assert.equal((await savedState()).jobs.filters.family,'all');
   await page.locator('.cc-employment-nav [data-mode="home"]').click();
@@ -550,8 +563,9 @@ try {
   assert.ok((await savedState()).profile.achievements.some(entry=>entry.title==='校园固件项目'&&entry.verificationStatus==='unverified'));
   assert.ok(!JSON.stringify(await savedState()).includes('student@example.com'));
   assert.equal(await page.locator('#cc-import-form').count(), 0, 'External Boss/JD paste form must be removed');
-  await page.locator('.cc-employment-nav [data-mode="live"]').click();
-  await page.locator('[data-action="cc-live-sync"]').click();
+  await page.locator('.cc-employment-nav [data-mode="list"]').click();
+  await page.locator('[data-action="cc-live-panel"]').first().click();
+  await page.locator('#cc-live-panel [data-action="cc-live-sync"]').click();
   await page.locator('.cc-job-card[data-job-id="live_tx_e2e_fw_001"] [data-action="cc-open-job"]').first().click();
   const importedId=(await savedState()).jobs.openJobId;
   assert.equal(importedId,'live_tx_e2e_fw_001');
@@ -692,8 +706,11 @@ try {
   assert.equal((await savedState()).jobs.personalized,false);
   assert.equal(await page.locator('.cc-job-card .cc-job-match').count(),0);
   await page.locator('.cc-employment-nav [data-mode="saved"]').click();
-  await page.locator('[data-action="cc-reset-filters"]').first().click();
-  await page.locator(`.cc-job-card[data-job-id="${importedId}"] [data-action="cc-open-job"]`).first().click();
+  const markedRow=page.locator(`.cc-marked-card[data-job-id="${importedId}"]`);
+  await markedRow.locator('[data-action="cc-set-application"][data-status="interview"]').click();
+  assert.equal((await savedState()).jobs.applications[importedId].status,'interview');
+  assert.ok(await page.locator('.cc-funnel-stat').filter({hasText:'笔面试'}).getByText('1',{exact:true}).isVisible(),'Kanban funnel should follow the marked status');
+  await markedRow.locator('[data-action="cc-open-job"]').first().click();
   assert.equal(await practiceTab.count(),0);
   await page.setViewportSize({width:390,height:800});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),'Mobile layout should fit the viewport');
@@ -705,9 +722,13 @@ try {
   await reviewPage.goto(origin);
   await reviewPage.locator('.nav-item[data-module="profile"]').click();
   await reviewPage.locator('[data-field="school"]').fill('E2E_PRIVATE_SCHOOL');
-  await reviewPage.locator('[data-field="major"]').fill('机械电子工程');
-  for(let i=0;i<3;i++) await reviewPage.locator('[data-action="profile-next"]').click();
-  await reviewPage.locator('[data-action="gate-defer-all"]').first().click();
+  await reviewPage.locator('[data-action="profile-next"]').click();
+  await reviewPage.locator('#step3-major').fill('机械电子工程');
+  await reviewPage.locator('[data-action="profile-next"]').click();
+  await reviewPage.locator('.nav-item[data-module="profile"]').click();
+  const reviewPreview=reviewPage.locator('[data-action="goto-preview"]').first();
+  if(await reviewPreview.count()) await reviewPreview.click();
+  else await reviewPage.locator('[data-action="gate-defer-all"]').first().click();
   await reviewPage.locator('[data-action="profile-save"]').click();
   await reviewPage.locator('.nav-item[data-module="jobs"]').click();
   await reviewPage.locator('.cc-employment-nav [data-mode="list"]').click();
@@ -718,15 +739,18 @@ try {
     return job&&{id:job.id,org:job.org,url:job.sourceSnapshot.applyUrl,status:CC.jobFreshness(job).status};
   });
   assert.ok(direct,'The catalog must include an official posting with a verified application URL');
+  const reviewCompanyDetails=reviewPage.locator('details.cc-more-filters');
+  if(!await reviewCompanyDetails.evaluate(node=>node.open)) await reviewCompanyDetails.locator('summary').click();
   await reviewPage.locator('select[data-cc-filter="company"]').selectOption(direct.org);
   await reviewPage.locator('.cc-job-card[data-job-id="'+direct.id+'"] .cc-job-actions [data-action="cc-open-job"]').click();
   const applyLink=reviewPage.locator('[data-action="cc-apply-started"]');
   if(['confirmed_active','observed_active'].includes(direct.status)) assert.equal(await applyLink.getAttribute('href'),direct.url);
   else assert.equal(await applyLink.count(),0);
-  await reviewPage.locator('#cc-llm-bar .cc-dual-pill').filter({hasText:'qwen3.8-27b-local'}).waitFor();
+  await reviewPage.locator('[data-action="cc-run-copilot"]').waitFor();
   assert.equal(await reviewPage.getByLabel('八维字段匹配矩阵').locator('.cc-field-row').count(),8);
   await reviewPage.locator('[data-action="cc-run-copilot"]').click();
   await reviewPage.locator('#cc-copilot-panel').getByText('八维字段硬门槛核对清晰',{exact:false}).waitFor();
+  assert.match(await reviewPage.locator('#cc-copilot-panel').textContent(),/qwen3\.8-27b-local/);
   await reviewPage.locator('.cc-detail-tabs [data-action="cc-detail-tab"][data-key="jd"]').click();
   await reviewPage.locator('[data-action="cc-run-jd-parse"]').click();
   await reviewPage.locator('#cc-jd-copilot-panel').getByText('面向工程研发与测试联调的核心技术岗',{exact:false}).waitFor();
@@ -773,6 +797,8 @@ try {
   assert.equal(pilotReport.roadmapActionable.responses,0);
   assert.equal(pilotReport.topFiveTrust.responses,1);
   await reviewPage.locator('.nav-item[data-module="evidence"]').click();
+  const engineBox=reviewPage.locator('details.engine-box');
+  if(!await engineBox.evaluate(node=>node.open)) await engineBox.locator('summary').click();
   await reviewPage.locator('#ev-engine').selectOption('qwen');
   await reviewPage.locator('#ev-text').fill('姓名：PRIVATE_NAME 电话：13800138000 邮箱：secret@example.com 课程设计独立完成机电闭环控制实验与串口日志采集。');
   await reviewPage.locator('[data-action="ev-analyze"]').click();
@@ -897,7 +923,7 @@ try {
     await vaultPage.locator('#ws-truth').check();
     await vaultPage.locator('[data-action="ev-save"]').click();
     assert.equal(await vaultPage.evaluate(() => state.profile.achievements.length), 1);
-    await vaultPage.locator('[data-action="profile-next"]').click();
+    await vaultPage.getByRole('button',{name:'去「时间与成果」→',exact:true}).click();
 
     // Step 05: Parallel schedules (05a) + available time (05b) + synced achievements (05c) + Completeness Gate -> Step 06 Preview
     await vaultPage.locator('#sch-title').fill('秋季期末集中考试周');
@@ -922,18 +948,18 @@ try {
     await vaultPage.locator('[data-action="path-toggle"][data-path="jiuye"]').click();
     await vaultPage.locator('[data-action="go-diag"]').click();
     await vaultPage.locator('[data-action="diag-tab"][data-path="jiuye"]').click();
-    const diagDirIndex = (await vaultPage.locator('#diag-jiuye-summary .tag.blue').first().textContent()).trim();
+    const diagDirName = (await vaultPage.locator('#diag-jiuye-summary .f-chips span').first().textContent()).trim().replace(/^方向 · /, '');
     await vaultPage.locator('[data-action="diag-add-path"][data-path="baoyan"]').click();
     assert.ok(await vaultPage.locator('[data-action="diag-tab"][data-path="baoyan"]').isVisible());
     await vaultPage.locator('.nav-item[data-module="jobs"]').click();
     assert.equal(await vaultPage.locator('.cc-quick-tools').count(), 0, 'Duplicate quick tools bar must be removed');
     assert.equal(await vaultPage.getByText('求职就绪度概览', { exact: false }).count(), 0, 'Fake KPI strip must be removed');
     assert.equal(await vaultPage.getByLabel('31.8万校招仓定向直通车').count(), 0, 'Duplicate warehouse strip must be removed from home');
-    const jobsDirIndex = (await vaultPage.locator('.cc-direction-card .tag.blue').first().textContent()).trim();
-    assert.equal(diagDirIndex, jobsDirIndex, 'Diagnosis direction index must match Employment direction card index');
+    const jobsDirName = (await vaultPage.locator('.cc-direction-card h3').first().textContent()).trim();
+    assert.equal(diagDirName, jobsDirName, 'Diagnosis direction must match Employment direction card');
     await vaultPage.locator('.cc-employment-nav [data-mode="list"]').click();
     await vaultPage.locator('.cc-job-card [data-action="cc-save-job"]').first().click();
-    await vaultPage.locator('.nav-item[data-module="diag"]').click();
+    await vaultPage.locator('.nav-item[data-module="paths"]').click();
     assert.ok(await vaultPage.locator('#global-action-plan').getByText('投递跟进', { exact: false }).first().isVisible());
     await vaultPage.locator('.nav-item[data-module="conflict"]').click();
     assert.ok(await vaultPage.getByText('秋季期末集中考试周', { exact: false }).first().isVisible());
