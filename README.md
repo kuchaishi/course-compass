@@ -24,7 +24,7 @@
 ## 就业·岗位库（双擎架构 · 离线简历解析 · 四步精简成长路线 · 静态 + 本地双模运行）
 
 支持两种零成本打开方式：
-1. **在线静态网站版（免安装即开即用）**：直接浏览器访问 [https://xxr627.github.io/course-compass/](https://xxr627.github.io/course-compass/)。自动激活纯前端八维引擎 + `expert-copilot-v2` 专家副驾 + 浏览器端离线 PDF/DOCX 简历解析（亦可在「☁️ 云端 API 配置」填入个人免费魔搭/硅基流动/智谱会话 Key 直连大模型）。
+1. **在线静态网站版（免安装即开即用）**：直接浏览器访问 [[https://kuchaishi.github.io/course-compass/](https://kuchaishi.github.io/course-compass/))。自动激活纯前端八维引擎 + `expert-copilot-v2` 专家副驾 + 浏览器端离线 PDF/DOCX 简历解析（亦可在「☁️ 云端 API 配置」填入个人免费魔搭/硅基流动/智谱会话 Key 直连大模型）。
 2. **本机全量引擎版（含 31.8 万 SQLite 校招仓 + `.env.local` 多源免费云网关）**：Windows 下双击运行 **`start.bat`**（自动识别便携版 Node 路径并打开 `http://127.0.0.1:8090/`），或在终端运行 `node _serve.mjs`（部署至 **Qoder Sites** 或公网容器时可执行 `HOST=0.0.0.0 PORT=8090 node _serve.mjs`）。服务端内置同源、`127.0.0.1` 与 `X-Forwarded-Host` 安全校验及请求限流保护。**默认严格零本地 GPU 占用**：绝不自动探测或拉起本机 Ollama / 千问权重（避免抢占宿主机训练显存）；仅当显式设置 `CC_ENABLE_LOCAL_LLM=1` 时才启用本地 Ollama。
 
 云端内置 **多源纯免费 OpenAI 兼容瀑布流网关（零付费扣费风险）**：支持在 `.gitignore` 忽略的 `.env.local`、页面「☁️ 云端 API 配置」弹窗一键挂载或通过 `node _setup-modelscope.mjs <Token>` 配置 **`MODELSCOPE_API_KEY`（方案一 · 魔搭 API-Inference 每日免费额度，超额仅返 `429` 绝不自动扣费；内置 7 款实测纯免费模型：`Qwen/Qwen3.8-27B` 首选、`Qwen/Qwen3.8-Flash-Next`、`deepseek-ai/DeepSeek-V4.1-Flash-1017`、`Qwen/Qwen3.5-122B-A10B`、`Qwen/Qwen3.5-397B-A17B`、`deepseek-ai/DeepSeek-V4-Pro-0813`、`Qwen/Qwen3.5-35B-A3B`）→ `SILICONFLOW_API_KEY`（硅基流动永久免费 `Qwen/Qwen3-8B` / `GLM-4-9B`）→ `ZHIPU_API_KEY`（智谱永久免费 `glm-4.7-flash` / `glm-4.5-flash` / `glm-4-flash-250414` 跨平台二顺位自动兜底）→ `DASHSCOPE_API_KEY` / `QIANFAN_API_KEY` → `expert-copilot-v2`（零显存规则兜底）**。网关自动执行 **`3.5s` 首字超时截断（TTFT Guard）+ `120s` 拥塞冷却熔断 + `401/403/429` 跨平台无缝回退 + `enable_thinking: false` / `<think>` 流式净滤 + `30min` 内容哈希内存缓存（秒回 `1ms`）**。
